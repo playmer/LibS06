@@ -19,85 +19,130 @@
 
 #pragma once
 
-#include "FBX.h"
+#include <string>
+#include <vector>
 
-#define LIBGENS_S06_XNINFO_ERROR_MESSAGE_NULL_FILE         "Trying to read xninfo data from unreferenced file."
-#define LIBGENS_S06_XNINFO_ERROR_MESSAGE_WRITE_NULL_FILE   "Trying to write xninfo data to an unreferenced file."
+#include "glm/glm.hpp"
+#include "glm/gtc/quaternion.hpp"
+#include "glm/common.hpp"
+#include "tinyxml.h"
+#include "File.hpp"
 
-#define LIBGENS_XNSECTION_HEADER_INFO_XNO              "NXIF"
-#define LIBGENS_XNSECTION_HEADER_TEXTURE_XNO           "NXTL"
-#define LIBGENS_XNSECTION_HEADER_EFFECT_XNO            "NXEF"
-#define LIBGENS_XNSECTION_HEADER_OBJECT_XNO            "NXOB"
-#define LIBGENS_XNSECTION_HEADER_BONES_XNO             "NXNN"
-#define LIBGENS_XNSECTION_HEADER_MOTION_XNO            "NXMO"
+#define LIBS06_XNINFO_ERROR_MESSAGE_NULL_FILE         "Trying to read xninfo data from unreferenced file."
+#define LIBS06_XNINFO_ERROR_MESSAGE_WRITE_NULL_FILE   "Trying to write xninfo data to an unreferenced file."
 
-#define LIBGENS_XNSECTION_HEADER_INFO_ZNO              "NZIF"
-#define LIBGENS_XNSECTION_HEADER_TEXTURE_ZNO           "NZTL"
-#define LIBGENS_XNSECTION_HEADER_EFFECT_ZNO            "NZEF"
-#define LIBGENS_XNSECTION_HEADER_OBJECT_ZNO            "NZOB"
-#define LIBGENS_XNSECTION_HEADER_BONES_ZNO             "NZNN"
-#define LIBGENS_XNSECTION_HEADER_MOTION_ZNO            "NZMO"
+#define LIBS06_XNSECTION_HEADER_INFO_XNO              "NXIF"
+#define LIBS06_XNSECTION_HEADER_TEXTURE_XNO           "NXTL"
+#define LIBS06_XNSECTION_HEADER_EFFECT_XNO            "NXEF"
+#define LIBS06_XNSECTION_HEADER_OBJECT_XNO            "NXOB"
+#define LIBS06_XNSECTION_HEADER_BONES_XNO             "NXNN"
+#define LIBS06_XNSECTION_HEADER_MOTION_XNO            "NXMO"
 
-#define LIBGENS_XNSECTION_HEADER_INFO_YNO              "NYIF"
+#define LIBS06_XNSECTION_HEADER_INFO_ZNO              "NZIF"
+#define LIBS06_XNSECTION_HEADER_TEXTURE_ZNO           "NZTL"
+#define LIBS06_XNSECTION_HEADER_EFFECT_ZNO            "NZEF"
+#define LIBS06_XNSECTION_HEADER_OBJECT_ZNO            "NZOB"
+#define LIBS06_XNSECTION_HEADER_BONES_ZNO             "NZNN"
+#define LIBS06_XNSECTION_HEADER_MOTION_ZNO            "NZMO"
 
-#define LIBGENS_XNSECTION_HEADER_INFO_ENO              "NEIF"
-#define LIBGENS_XNSECTION_HEADER_TEXTURE_ENO           "NETL"
-#define LIBGENS_XNSECTION_HEADER_EFFECT_ENO            "NEEF"
-#define LIBGENS_XNSECTION_HEADER_OBJECT_ENO            "NEOB"
-#define LIBGENS_XNSECTION_HEADER_BONES_ENO             "NENN"
-#define LIBGENS_XNSECTION_HEADER_MOTION_ENO            "NEMO"
+#define LIBS06_XNSECTION_HEADER_INFO_YNO              "NYIF"
 
-#define LIBGENS_XNSECTION_HEADER_INFO_GNO              "NGIF"
-#define LIBGENS_XNSECTION_HEADER_TEXTURE_GNO           "NGTL"
-#define LIBGENS_XNSECTION_HEADER_EFFECT_GNO            "NGEF"
-#define LIBGENS_XNSECTION_HEADER_OBJECT_GNO            "NGOB"
-#define LIBGENS_XNSECTION_HEADER_BONES_GNO             "NGNN"
-#define LIBGENS_XNSECTION_HEADER_MOTION_GNO            "NGMO"
+#define LIBS06_XNSECTION_HEADER_INFO_ENO              "NEIF"
+#define LIBS06_XNSECTION_HEADER_TEXTURE_ENO           "NETL"
+#define LIBS06_XNSECTION_HEADER_EFFECT_ENO            "NEEF"
+#define LIBS06_XNSECTION_HEADER_OBJECT_ENO            "NEOB"
+#define LIBS06_XNSECTION_HEADER_BONES_ENO             "NENN"
+#define LIBS06_XNSECTION_HEADER_MOTION_ENO            "NEMO"
 
-#define LIBGENS_XNSECTION_HEADER_INFO_INO              "NIIF"
-#define LIBGENS_XNSECTION_HEADER_TEXTURE_INO           "NITL"
-#define LIBGENS_XNSECTION_HEADER_EFFECT_INO            "NIEF"
-#define LIBGENS_XNSECTION_HEADER_OBJECT_INO            "NIOB"
-#define LIBGENS_XNSECTION_HEADER_BONES_INO             "NINN"
-#define LIBGENS_XNSECTION_HEADER_MOTION_INO            "NIMO"
+#define LIBS06_XNSECTION_HEADER_INFO_GNO              "NGIF"
+#define LIBS06_XNSECTION_HEADER_TEXTURE_GNO           "NGTL"
+#define LIBS06_XNSECTION_HEADER_EFFECT_GNO            "NGEF"
+#define LIBS06_XNSECTION_HEADER_OBJECT_GNO            "NGOB"
+#define LIBS06_XNSECTION_HEADER_BONES_GNO             "NGNN"
+#define LIBS06_XNSECTION_HEADER_MOTION_GNO            "NGMO"
+
+#define LIBS06_XNSECTION_HEADER_INFO_INO              "NIIF"
+#define LIBS06_XNSECTION_HEADER_TEXTURE_INO           "NITL"
+#define LIBS06_XNSECTION_HEADER_EFFECT_INO            "NIEF"
+#define LIBS06_XNSECTION_HEADER_OBJECT_INO            "NIOB"
+#define LIBS06_XNSECTION_HEADER_BONES_INO             "NINN"
+#define LIBS06_XNSECTION_HEADER_MOTION_INO            "NIMO"
 
 
-#define LIBGENS_XNSECTION_HEADER_OFFSET_TABLE          "NOF0"
-#define LIBGENS_XNSECTION_HEADER_FOOTER                "NFN0"
-#define LIBGENS_XNSECTION_HEADER_END                   "NEND"
+#define LIBS06_XNSECTION_HEADER_OFFSET_TABLE          "NOF0"
+#define LIBS06_XNSECTION_HEADER_FOOTER                "NFN0"
+#define LIBS06_XNSECTION_HEADER_END                   "NEND"
 
-#define LIBGENS_XNSECTION_HEADER_SIZE                  8
-#define LIBGENS_XNSECTION_PADDING                      16
+#define LIBS06_XNSECTION_HEADER_SIZE                  8
+#define LIBS06_XNSECTION_PADDING                      16
 
-#define LIBGENS_XNO_EXTENSION                          ".xno"
-#define LIBGENS_XNM_EXTENSION                          ".xnm"
-#define LIBGENS_ZNO_EXTENSION                          ".zno"
-#define LIBGENS_ZNM_EXTENSION                          ".znm"
-#define LIBGENS_INO_EXTENSION                          ".ino"
-#define LIBGENS_INM_EXTENSION                          ".inm"
-#define LIBGENS_GNO_EXTENSION                          ".gno"
-#define LIBGENS_GNM_EXTENSION                          ".gnm"
-#define LIBGENS_GNA_EXTENSION                          ".gna"
-#define LIBGENS_ENO_EXTENSION                          ".eno"
+#define LIBS06_XNO_EXTENSION                          ".xno"
+#define LIBS06_XNM_EXTENSION                          ".xnm"
+#define LIBS06_ZNO_EXTENSION                          ".zno"
+#define LIBS06_ZNM_EXTENSION                          ".znm"
+#define LIBS06_INO_EXTENSION                          ".ino"
+#define LIBS06_INM_EXTENSION                          ".inm"
+#define LIBS06_GNO_EXTENSION                          ".gno"
+#define LIBS06_GNM_EXTENSION                          ".gnm"
+#define LIBS06_GNA_EXTENSION                          ".gna"
+#define LIBS06_ENO_EXTENSION                          ".eno"
 
-#define LIBGENS_XNO_VERTEX_TABLE_TERRAIN_FLAG          0x2000B
+#define LIBS06_XNO_VERTEX_TABLE_TERRAIN_FLAG          0x2000B
 
-#define LIBGENS_XNMOTION_TYPE_X_COORDINATE_LINEAR      0x101
-#define LIBGENS_XNMOTION_TYPE_Y_COORDINATE_LINEAR      0x201
-#define LIBGENS_XNMOTION_TYPE_Z_COORDINATE_LINEAR      0x401
-#define LIBGENS_XNMOTION_TYPE_X_ANGLE_BETA             0x809
-#define LIBGENS_XNMOTION_TYPE_Y_ANGLE_BETA             0x1009
-#define LIBGENS_XNMOTION_TYPE_Z_ANGLE_BETA             0x2009
-#define LIBGENS_XNMOTION_TYPE_COORDINATES_LINEAR       0x701
-#define LIBGENS_XNMOTION_TYPE_X_ANGLE_LINEAR		   0x812
-#define LIBGENS_XNMOTION_TYPE_Y_ANGLE_LINEAR           0x1012
-#define LIBGENS_XNMOTION_TYPE_Z_ANGLE_LINEAR           0x2012
-#define LIBGENS_XNMOTION_TYPE_ANGLES_LINEAR            0x3812
-#define LIBGENS_XNMOTION_TYPE_X_SCALE_LINEAR           0x8001
-#define LIBGENS_XNMOTION_TYPE_Y_SCALE_LINEAR           0x10001
-#define LIBGENS_XNMOTION_TYPE_Z_SCALE_LINEAR           0x20001
+#define LIBS06_XNMOTION_TYPE_X_COORDINATE_LINEAR      0x101
+#define LIBS06_XNMOTION_TYPE_Y_COORDINATE_LINEAR      0x201
+#define LIBS06_XNMOTION_TYPE_Z_COORDINATE_LINEAR      0x401
+#define LIBS06_XNMOTION_TYPE_X_ANGLE_BETA             0x809
+#define LIBS06_XNMOTION_TYPE_Y_ANGLE_BETA             0x1009
+#define LIBS06_XNMOTION_TYPE_Z_ANGLE_BETA             0x2009
+#define LIBS06_XNMOTION_TYPE_COORDINATES_LINEAR       0x701
+#define LIBS06_XNMOTION_TYPE_X_ANGLE_LINEAR           0x812
+#define LIBS06_XNMOTION_TYPE_Y_ANGLE_LINEAR           0x1012
+#define LIBS06_XNMOTION_TYPE_Z_ANGLE_LINEAR           0x2012
+#define LIBS06_XNMOTION_TYPE_ANGLES_LINEAR            0x3812
+#define LIBS06_XNMOTION_TYPE_X_SCALE_LINEAR           0x8001
+#define LIBS06_XNMOTION_TYPE_Y_SCALE_LINEAR           0x10001
+#define LIBS06_XNMOTION_TYPE_Z_SCALE_LINEAR           0x20001
 
-namespace LibGens {
+namespace LibS06 {
+	namespace Error {
+		enum class LogType
+		{
+			LOG,
+			WARNING,
+			NULL_REFERENCE,
+			ERROR
+		};
+
+		void AddMessage(LogType aLogType, std::string aMessage){
+			switch (aLogType)
+			{
+				case LogType::LOG: std::cout << "LOG: ";
+				case LogType::WARNING: std::cout << "WARNING: ";
+				case LogType::NULL_REFERENCE: std::cout << "NULL_REFERENCE: ";
+				case LogType::ERROR: std::cout << "ERROR: ";
+			}
+
+			std::cout << aMessage;
+
+			if (LogType::ERROR == aLogType || LogType::NULL_REFERENCE == aLogType)
+				throw aMessage;
+		}
+
+
+		template <typename ...Args>
+		void printfMessage(LogType aLogType, Args... aArgs)
+		{
+			printf(aArgs...);
+			throw "PrintfMessage";
+		}
+	}
+	
+	namespace MathConstants {
+		constexpr float Pi = 3.141592653f;
+		constexpr float i32ToRadian = (0.5493164f / 36000.0f * Pi * 2);
+	}
+
 	enum XNFileMode {
 		MODE_AUTODETECT,
 		MODE_XNO,
@@ -114,7 +159,7 @@ namespace LibGens {
 		protected:
 			size_t head_address;
 			unsigned int section_size;
-			string header;
+			std::string header;
 			XNFileMode file_mode;
 			bool big_endian;
 		public:
@@ -130,7 +175,7 @@ namespace LibGens {
 				return file_mode;
 			}
 
-			void setHeader(string v) {
+			void setHeader(std::string v) {
 				header = v;
 			}
 
@@ -152,7 +197,7 @@ namespace LibGens {
 				return section_size;
 			}
 
-			string getHeader() {
+			std::string getHeader() {
 				return header;
 			}
 
@@ -193,22 +238,22 @@ namespace LibGens {
 
 	class SonicXNTexture : public SonicXNSection {
 		protected:
-			vector<size_t> texture_addresses;
-			vector<string> textures;
-			vector<unsigned int> sizes;
+			std::vector<size_t> texture_addresses;
+			std::vector<std::string> textures;
+			std::vector<unsigned int> sizes;
 		public:
 			SonicXNTexture() {
 			}
 
 			void read(File *file);
 			void writeBody(File *file);
-			unsigned int addTexture(string name);
+			unsigned int addTexture(std::string name);
 
-			vector<string> getTextures() {
+			std::vector<std::string> getTextures() {
 				return textures;
 			}
 
-			string getTexture(size_t i) {
+			std::string getTexture(size_t i) {
 				if (i >= textures.size()) {
 					return "blank";
 				}
@@ -229,13 +274,13 @@ namespace LibGens {
 
 	class SonicXNEffect : public SonicXNSection {
 		protected:
-			vector<string> material_names;
-			vector<string> material_shaders;
-			vector<unsigned int> material_indices;
-			vector<unsigned short> extras;
+			std::vector<std::string> material_names;
+			std::vector<std::string> material_shaders;
+			std::vector<unsigned int> material_indices;
+			std::vector<unsigned short> extras;
 
-			vector<size_t> material_names_addresses;
-			vector<size_t> material_shaders_addresses;
+			std::vector<size_t> material_names_addresses;
+			std::vector<size_t> material_shaders_addresses;
 		public:
 			SonicXNEffect() {
 			}
@@ -243,7 +288,7 @@ namespace LibGens {
 			void read(File *file);
 			void writeBody(File *file);
 
-			size_t addMaterialName(string v, size_t shader_index=0xFFFFFFFF) {
+			size_t addMaterialName(std::string v, size_t shader_index=0xFFFFFFFF) {
 				for (size_t i=0; i<material_names.size(); i++) {
 					if (material_names[i] == v) {
 						return i;
@@ -258,7 +303,7 @@ namespace LibGens {
 				return material_names.size()-1;
 			}
 
-			size_t addMaterialShader(string v) {
+			size_t addMaterialShader(std::string v) {
 				for (size_t i=0; i<material_shaders.size(); i++) {
 					if (material_shaders[i] == v) {
 						return i;
@@ -299,29 +344,29 @@ namespace LibGens {
 
 	class SonicVertex {
 		public:
-			Vector3 position;
-			Vector3 normal;
-			Vector2 uv[4];
+			glm::vec3 position;
+			glm::vec3 normal;
+			glm::vec2 uv[4];
 			float bone_weights_f[4];
 			unsigned char bone_indices[4];
 			unsigned char rgba[4];
 			unsigned char rgba_2[4];
-			Vector3 tangent;
-			Vector3 binormal;
+			glm::vec3 tangent;
+			glm::vec3 binormal;
 
 			SonicVertex() {
 
 			}
 
 			void zero() {
-				position = Vector3(0.0f, 0.0f, 0.0f);
-				normal = Vector3(0.0f, 0.0f, 0.0f);
-				tangent = Vector3(0.0f, 0.0f, 0.0f);
-				binormal = Vector3(0.0f, 0.0f, 0.0f);
-				uv[0] = Vector2(0.0f, 0.0f);
-				uv[1] = Vector2(0.0f, 0.0f);
-				uv[2] = Vector2(0.0f, 0.0f);
-				uv[3] = Vector2(0.0f, 0.0f);
+				position = glm::vec3(0.0f, 0.0f, 0.0f);
+				normal = glm::vec3(0.0f, 0.0f, 0.0f);
+				tangent = glm::vec3(0.0f, 0.0f, 0.0f);
+				binormal = glm::vec3(0.0f, 0.0f, 0.0f);
+				uv[0] = glm::vec2(0.0f, 0.0f);
+				uv[1] = glm::vec2(0.0f, 0.0f);
+				uv[2] = glm::vec2(0.0f, 0.0f);
+				uv[3] = glm::vec2(0.0f, 0.0f);
 				bone_weights_f[0] = 1.0f;
 				bone_weights_f[1] = 0.0f;
 				bone_weights_f[2] = 0.0f;
@@ -409,8 +454,8 @@ namespace LibGens {
 			unsigned int flag;
 			unsigned int index;
 			unsigned int enviroment_mode;
-			Vector2 offset;
-			Vector2 scale;
+			glm::vec2 offset;
+			glm::vec2 scale;
 			unsigned int wrap_s;
 			unsigned int wrap_t;
 			float lod_bias;
@@ -438,10 +483,10 @@ namespace LibGens {
 	class SonicMaterialColor {
 		public:
 			unsigned int flag;
-			Color ambient;
-			Color diffuse;
-			Color specular;
-			Color emission;
+			glm::vec4 ambient;
+			glm::vec4 diffuse;
+			glm::vec4 specular;
+			glm::vec4 emission;
 			float shininess;
 			float specular_intensity;
 
@@ -479,11 +524,11 @@ namespace LibGens {
 			float first_floats[20];
 			int first_ints[16];
 
-			SonicMaterialColor *colors;
-			SonicMaterialProperties *properties;
+			SonicMaterialColor* colors;
+			SonicMaterialProperties* properties;
 
-			vector<SonicTextureUnit *> texture_units;
-			vector<SonicTextureUnitZNO *> texture_units_zno;
+			std::vector<SonicTextureUnit*> texture_units;
+			std::vector<SonicTextureUnitZNO*> texture_units_zno;
 
 			SonicMaterialTable() {
 			}
@@ -529,12 +574,12 @@ namespace LibGens {
 	
 	class SonicVertexResourceTable {
 		public:
-			vector<Vector3>				positions;
-			vector<Vector3>				normals;
-			vector<Vector2>				uvs;
-			vector<Vector2>				uvs_2;
-			vector<SonicVertexBoneData> bones;
-			vector<Color>               colors;
+			std::vector<glm::vec3>				positions;
+			std::vector<glm::vec3>				normals;
+			std::vector<glm::vec2>				uvs;
+			std::vector<glm::vec2>				uvs_2;
+			std::vector<SonicVertexBoneData> bones;
+			std::vector<glm::vec4>               colors;
 
 			SonicVertexResourceTable() {
 			}
@@ -588,7 +633,7 @@ namespace LibGens {
 	class SonicPolygonTable {
 		public:
 			unsigned int flag;
-			vector<SonicPolygon *> faces;
+			std::vector<SonicPolygon*> faces;
 
 			SonicPolygonTable() {
 			}
@@ -598,8 +643,8 @@ namespace LibGens {
 
 	class SonicVertexTable {
 		public:
-			vector<SonicVertex *> vertices;
-			vector<unsigned int> bone_table;
+			std::vector<SonicVertex*> vertices;
+			std::vector<unsigned int> bone_table;
 
 			unsigned int vertex_size;
 			unsigned int flag_1;
@@ -623,9 +668,9 @@ namespace LibGens {
 	class SonicIndexTable {
 		public:
 			unsigned int flag;
-			vector<unsigned short> indices;
-			vector<unsigned short> strip_sizes;
-			vector<Vector3> indices_vector;
+			std::vector<unsigned short> indices;
+			std::vector<unsigned short> strip_sizes;
+			std::vector<glm::vec3> indices_vector;
 
 			size_t strip_sizes_address_data;
 			size_t indices_address_data;
@@ -643,7 +688,7 @@ namespace LibGens {
 
 	class SonicSubmesh {
 		public:
-			Vector3 center;
+			glm::vec3 center;
 			float radius;
 			unsigned int node_index;
 			unsigned int matrix_index;
@@ -659,14 +704,14 @@ namespace LibGens {
 	
 	class SonicMesh {
 		public:
-			vector<SonicSubmesh *> submeshes;
-			vector<unsigned int> extras;
+			std::vector<SonicSubmesh *> submeshes;
+			std::vector<unsigned int> extras;
 			unsigned int flag;
 
 			size_t submesh_table_address;
 			size_t extra_table_address;
 
-			string name;
+			std::string name;
 
 			void read(File *file, bool big_endian, XNFileMode file_mode);
 
@@ -674,11 +719,11 @@ namespace LibGens {
 			void writeExtras(File *file);
 			void write(File *file);
 
-			vector<unsigned int> getExtras() {
+			std::vector<unsigned int> getExtras() {
 				return extras;
 			}
 
-			void setExtras(vector<unsigned int> v) {
+			void setExtras(std::vector<unsigned int> v) {
 				extras=v;
 			}
 
@@ -694,18 +739,18 @@ namespace LibGens {
 			unsigned short parent_index;
 			unsigned short child_index;
 			unsigned short sibling_index;
-			Vector3 translation;
+			glm::vec3 translation;
 			unsigned int rotation_x;
 			unsigned int rotation_y;
 			unsigned int rotation_z;
-			Vector3 scale;
-			Quaternion orientation;
-			Matrix4 matrix;
-			Matrix4 current_matrix;
-			Vector3 center;
+			glm::vec3 scale;
+			glm::quat orientation;
+			glm::mat4 matrix;
+			//glm::mat4 current_matrix;
+			glm::vec3 center;
 			float radius;
 			unsigned int user;
-			Vector3 bounding_box;
+			glm::vec3 bounding_box;
 
 			float scale_animation_mod;
 
@@ -717,8 +762,8 @@ namespace LibGens {
 				child_index = 0xFFFF;
 				sibling_index = 0xFFFF;
 
-				bounding_box = LibGens::Vector3(0, 0, 0);
-				center = LibGens::Vector3(0, 0, 0);
+				bounding_box = glm::vec3(0, 0, 0);
+				center = glm::vec3(0, 0, 0);
 				radius = 0.0f;
 				user = 0;
 				scale_animation_mod = 1.0f;
@@ -733,9 +778,9 @@ namespace LibGens {
 
 	class SonicXNBones : public SonicXNSection {
 		protected:
-			vector<string> bone_names;
-			vector<unsigned int> bone_indices;
-			vector<size_t> bone_names_addresses;
+			std::vector<std::string> bone_names;
+			std::vector<unsigned int> bone_indices;
+			std::vector<size_t> bone_names_addresses;
 		public:
 			SonicXNBones() {
 			}
@@ -743,15 +788,15 @@ namespace LibGens {
 			void read(File *file);
 			void writeBody(File *file);
 
-			void setName(size_t i, string name) {
+			void setName(size_t i, std::string name) {
 				bone_names[i] = name;
 			}
 
-			string getName(size_t i) {
+			std::string getName(size_t i) {
 				return bone_names[i];
 			}
 
-			void addBone(string name, size_t index) {
+			void addBone(std::string name, size_t index) {
 				bone_names.push_back(name);
 				bone_indices.push_back(index);
 			}
@@ -805,7 +850,7 @@ namespace LibGens {
 	class SonicFrameValueFloats {
 		public:
 			float frame;
-			Vector3 value;
+			glm::vec3 value;
 
 			void read(File *file, bool big_endian);
 			void write(File *file);
@@ -824,12 +869,12 @@ namespace LibGens {
 
 	class SonicMotionControl {
 		public:
-			vector<SonicFrameValue *> frame_values;
-			vector<SonicFrameValueInt *> frame_values_int;
-			vector<SonicFrameValueIntBeta *> frame_values_int_beta;
-			vector<SonicFrameValueFloats *> frame_values_floats;
-			vector<SonicFrameValueAngles *> frame_values_angles;
-			vector<SonicFrameValueFloatsGroup *> frame_values_floats_groups;
+			std::vector<SonicFrameValue *> frame_values;
+			std::vector<SonicFrameValueInt *> frame_values_int;
+			std::vector<SonicFrameValueIntBeta *> frame_values_int_beta;
+			std::vector<SonicFrameValueFloats *> frame_values_floats;
+			std::vector<SonicFrameValueAngles *> frame_values_angles;
+			std::vector<SonicFrameValueFloatsGroup *> frame_values_floats_groups;
 
 			unsigned int bone_index;
 			unsigned int type;
@@ -845,7 +890,7 @@ namespace LibGens {
 			SonicMotionControl() {
 			}
 
-			Vector3 getFrameVector(float frame, Vector3 reference);
+			glm::vec3 getFrameVector(float frame, glm::vec3 reference);
 			float getFrameValue(float frame, float reference);
 
 			void read(File *file, bool big_endian);
@@ -869,7 +914,7 @@ namespace LibGens {
 					return (frame_values_floats.size()==1);
 				}
 				else if (element_size == 8) {
-					if (type == LIBGENS_XNMOTION_TYPE_ANGLES_LINEAR) return (frame_values_angles.size()==1);
+					if (type == LIBS06_XNMOTION_TYPE_ANGLES_LINEAR) return (frame_values_angles.size()==1);
 					else return (frame_values.size()==1);
 				}
 				else if (element_size == 4) {
@@ -888,7 +933,7 @@ namespace LibGens {
 
 	class SonicXNMotion : public SonicXNSection {
 		protected:
-			vector<SonicMotionControl *> motion_controls;
+			std::vector<SonicMotionControl *> motion_controls;
 			unsigned int flag;
 			float start_frame;
 			float end_frame;
@@ -945,24 +990,24 @@ namespace LibGens {
 
 	class SonicXNObject : public SonicXNSection {
 		public:
-			vector<SonicMaterialTable *> material_tables;
-			vector<SonicVertexTable *> vertex_tables;
-			vector<SonicIndexTable *> index_tables;
+			std::vector<SonicMaterialTable *> material_tables;
+			std::vector<SonicVertexTable *> vertex_tables;
+			std::vector<SonicIndexTable *> index_tables;
 
 			// GNO
-			vector<SonicVertexResourceTable *> vertex_resource_tables;
-			vector<SonicPolygonTable *> polygon_tables;
-			vector<SonicOldMaterialTable *> old_material_tables;
+			std::vector<SonicVertexResourceTable *> vertex_resource_tables;
+			std::vector<SonicPolygonTable *> polygon_tables;
+			std::vector<SonicOldMaterialTable *> old_material_tables;
 			
 
-			vector<SonicMesh *> meshes;
-			vector<SonicBone *> bones;
-			Vector3 center;
+			std::vector<SonicMesh *> meshes;
+			std::vector<SonicBone *> bones;
+			glm::vec3 center;
 			float radius;
 
 			unsigned int type;
 			unsigned int version;
-			Vector3 bounding_box;
+			glm::vec3 bounding_box;
 
 			unsigned int bone_max_depth;
 			unsigned int total_texture_count;
@@ -975,7 +1020,7 @@ namespace LibGens {
 
 			AABB aabb;
 
-			string name;
+			std::string name;
 
 			SonicXNObject(SonicXNTexture *texture_p, SonicXNEffect *effect_p, SonicXNBones *bone_p) {
 				texture       = texture_p;
@@ -985,13 +1030,13 @@ namespace LibGens {
 
 			void read(File *file);
 			void writeBody(File *file);
-			bool getBoneIndexByName(string name_search, unsigned int &index);
+			bool getBoneIndexByName(std::string name_search, unsigned int &index);
 
 			void writeMaterialDAE(TiXmlElement *root);
 			void writeMaterialBindDAE(TiXmlElement *root);
 			void writeEffectsDAE(TiXmlElement *root, SonicXNTexture *texture);
-			void writeEffectTextureDAE(TiXmlElement *root, string tex_name);
-			void writeEffectTechniqueDAE(TiXmlElement *root, string tex_name);
+			void writeEffectTextureDAE(TiXmlElement *root, std::string tex_name);
+			void writeEffectTechniqueDAE(TiXmlElement *root, std::string tex_name);
 			void writeBonesDAE(TiXmlElement *root, size_t current, float unit_scale);
 			void writeControllerDAE(TiXmlElement *root, float unit_scale);
 			void writeMeshesDAE(TiXmlElement *root, float unit_scale);
@@ -1000,16 +1045,16 @@ namespace LibGens {
 			void calculateMaxBoneDepth(size_t parent, size_t depth=0);
 			void calculateBoneMatrixCount();
 
-			void setNames(string v) {
+			void setNames(std::string v) {
 				name = v;
 				for (size_t i=0; i<meshes.size(); i++) {
-					meshes[i]->name = v + ToString(i);
+					meshes[i]->name = v + std::to_string(i);
 				}
 			}
 
 			void setScale(float scale);
 			void setBoneScale(unsigned short current_index, float scale, bool dont_scale=false);
-			void calculateSkinningMatrix(unsigned short current_index, LibGens::Matrix4 parent_matrix);
+			void calculateSkinningMatrix(unsigned short current_index, glm::mat4 parent_matrix);
 			void calculateSkinningMatrices();
 			void calculateSkinningIDs();
 	};
@@ -1017,7 +1062,7 @@ namespace LibGens {
 
 	class SonicXNOffsetTable : public SonicXNSection {
 		protected:
-			vector<size_t> addresses;
+			std::vector<size_t> addresses;
 		public:
 			SonicXNOffsetTable() {
 			}
@@ -1037,7 +1082,7 @@ namespace LibGens {
 
 	class SonicXNFooter : public SonicXNSection {
 		public:
-			string name;
+			std::string name;
 
 			SonicXNFooter() {
 			}
@@ -1058,24 +1103,24 @@ namespace LibGens {
 			SonicXNOffsetTable *offset_table;
 			SonicXNFooter *footer;
 			SonicXNEnd *end;
-			vector<SonicXNSection *> sections;
-			string folder;
+			std::vector<SonicXNSection *> sections;
+			std::string folder;
 			XNFileMode file_mode;
 			bool big_endian;
 
-			string header_info;
-			string header_texture;
-			string header_effect;
-			string header_bones;
-			string header_object;
-			string header_motion;
+			std::string header_info;
+			std::string header_texture;
+			std::string header_effect;
+			std::string header_bones;
+			std::string header_object;
+			std::string header_motion;
 		public:
-			SonicXNFile(string filename, XNFileMode file_mode_parameter=MODE_AUTODETECT);
+			SonicXNFile(std::string filename, XNFileMode file_mode_parameter=MODE_AUTODETECT);
 
 			SonicXNFile(XNFileMode file_mode_parameter);
 
 			SonicXNSection *readSection(File *file);
-			void save(string filename);
+			void save(std::string filename);
 			void write(File *file);
 
 			void deleteSection(SonicXNSection *section) {
@@ -1148,7 +1193,7 @@ namespace LibGens {
 				// Try to place behind object
 				for (size_t i=0; i<sections.size(); i++) {
 					if (sections[i]->getHeader() == header_object) {
-						vector<SonicXNSection *>::iterator it=sections.begin() + i;
+						std::vector<SonicXNSection *>::iterator it=sections.begin() + i;
 						sections.insert(it, effect);
 						return;
 					}
@@ -1183,7 +1228,7 @@ namespace LibGens {
 				// Try to place behind object
 				for (size_t i=0; i<sections.size(); i++) {
 					if (sections[i]->getHeader() == header_object) {
-						vector<SonicXNSection *>::iterator it=sections.begin() + i;
+						std::vector<SonicXNSection *>::iterator it=sections.begin() + i;
 						sections.insert(it, bones);
 						return;
 					}
@@ -1226,15 +1271,15 @@ namespace LibGens {
 			}
 			
 			void setFileMode(XNFileMode target_file_mode);
-			void saveDAE(string filename, bool only_animation=false, float unit_scale=1.0f);
+			//void saveDAE(std::string filename, bool only_animation=false, float unit_scale=1.0f);
 
 			void setHeaders();
 
-			void importFBX(FBX *fbx);
-			void addFBXNode(FbxNode *lNode);
-			void addFBXMaterial(FbxSurfaceMaterial *lMaterial);
-			void addFBXMaterialProperty(FbxProperty *lProperty, SonicMaterialTable *sonic_material_table);
-			void addFBXSubmesh(FbxNode *lNode, FbxMesh *lMesh, SonicMesh *sonic_mesh, int material_index, int material_base_index, bool single_material, FbxAMatrix transform_matrix);
+			//void importFBX(FBX *fbx);
+			//void addFBXNode(FbxNode *lNode);
+			//void addFBXMaterial(FbxSurfaceMaterial *lMaterial);
+			//void addFBXMaterialProperty(FbxProperty *lProperty, SonicMaterialTable *sonic_material_table);
+			//void addFBXSubmesh(FbxNode *lNode, FbxMesh *lMesh, SonicMesh *sonic_mesh, int material_index, int material_base_index, bool single_material, FbxAMatrix transform_matrix);
 
 			void createTextureSection();
 			void createEffectSection();

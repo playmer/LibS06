@@ -19,12 +19,12 @@
 
 #pragma once
 
-#include "FBX.h"
+#include "S06XnFile.h"
 
-#define LIBGENS_S06_COLLISION_ERROR_MESSAGE_NULL_FILE       "Trying to read collision data from unreferenced file."
-#define LIBGENS_S06_COLLISION_ERROR_MESSAGE_WRITE_NULL_FILE "Trying to write collision data to an unreferenced file."
+#define LIBS06_COLLISION_ERROR_MESSAGE_NULL_FILE       "Trying to read collision data from unreferenced file."
+#define LIBS06_COLLISION_ERROR_MESSAGE_WRITE_NULL_FILE "Trying to write collision data to an unreferenced file."
 
-namespace LibGens {
+namespace LibS06 {
 	class SonicCollisionFace {
 		public:
 			unsigned short v1;
@@ -38,23 +38,23 @@ namespace LibGens {
 
 	class SonicCollision {
 		public:
-			vector<Vector3> vertex_pool;
-			vector<SonicCollisionFace> face_pool;
+			std::vector<glm::vec3> vertex_pool;
+			std::vector<SonicCollisionFace> face_pool;
 
-			unsigned char *mopp_code_data;
+			std::vector<unsigned char> mopp_code_data;
 			unsigned int mopp_code_size;
-			Vector3 mopp_code_center;
+			glm::vec3 mopp_code_center;
 			float mopp_code_w;
 
-			SonicCollision(string filename);
+			SonicCollision(std::string filename);
 
-			SonicCollision(FBX *fbx);
-
-			void addFbxNode(FbxNode *node);
-			void buildMoppCode();
+			//SonicCollision(FBX *fbx);
+			//
+			//void addFbxNode(FbxNode *node);
+			//void buildMoppCode();
 
 			void read(File *file);
-			void save(string filename);
+			void save(std::string filename);
 			void write(File *file);
 	};
 };

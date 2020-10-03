@@ -19,33 +19,38 @@
 
 #pragma once
 
+#include "S06XnFile.h"
+
 #include "S06Common.h"
 
-#define LIBGENS_S06_SET_ERROR_MESSAGE_NULL_FILE       "Trying to read set data from unreferenced file."
-#define LIBGENS_S06_SET_ERROR_MESSAGE_WRITE_NULL_FILE "Trying to write set data to an unreferenced file."
+#define LIBS06_SET_ERROR_MESSAGE_NULL_FILE       "Trying to read set data from unreferenced file."
+#define LIBS06_SET_ERROR_MESSAGE_WRITE_NULL_FILE "Trying to write set data to an unreferenced file."
 
-#define LIBGENS_S06_SET_OFFSET_ROOT                   0x4C
-#define LIBGENS_S06_SET_OFFSET_STRING_OBJECT          0x41
-#define LIBGENS_S06_SET_OFFSET_PARAMETER_OBJECT       0x4E
+#define LIBS06_SET_OFFSET_ROOT                   0x4C
+#define LIBS06_SET_OFFSET_STRING_OBJECT          0x41
+#define LIBS06_SET_OFFSET_PARAMETER_OBJECT       0x4E
 
-#define LIBGENS_S06_SET_PARAMETER_BOOLEAN             0
-#define LIBGENS_S06_SET_PARAMETER_INTEGER             1
-#define LIBGENS_S06_SET_PARAMETER_FLOAT               2
-#define LIBGENS_S06_SET_PARAMETER_STRING              3
-#define LIBGENS_S06_SET_PARAMETER_VECTOR3             4
-#define LIBGENS_S06_SET_PARAMETER_ID                  6
+namespace LibS06 {
+	enum class SetParameters
+	{
+		Boolean = 0,
+		Integer = 1,
+		Float = 2,
+		String = 3,
+		Vector3 = 4,
+		Id = 6
+	};
 
 
-namespace LibGens {
 	class SonicSetObjectParameter {
 		friend SonicSetObjectParameter;
 
 		protected:
 			unsigned int type;
 			float value_f;
-			string value_s;
+			std::string value_s;
 			unsigned int value_i;
-			Vector3 value_v;
+			glm::vec3 value_v;
 		public:
 			SonicSetObjectParameter() {
 			}
@@ -72,7 +77,7 @@ namespace LibGens {
 				return value_f;
 			}
 
-			string getValueString() {
+			std::string getValueString() {
 				return value_s;
 			}
 
@@ -80,7 +85,7 @@ namespace LibGens {
 				return value_i;
 			}
 
-			Vector3 getValueVector() {
+			glm::vec3 getValueVector() {
 				return value_v;
 			}
 	};
@@ -89,15 +94,15 @@ namespace LibGens {
 		friend SonicSetObject;
 
 		protected:
-			Vector3 position;
-			Quaternion rotation;
+			glm::vec3 position;
+			glm::quat rotation;
 
-			string name;
-			string type;
+			std::string name;
+			std::string type;
 
 			float unknown;
 			float unknown_2;
-			vector<SonicSetObjectParameter *> parameters;
+			std::vector<SonicSetObjectParameter *> parameters;
 
 			size_t file_address;
 			size_t parameter_address;
@@ -108,7 +113,7 @@ namespace LibGens {
 			void read(File *file);
 			SonicSetObject(SonicSetObject *clone);
 
-			vector<SonicSetObjectParameter *> getParameters() {
+			std::vector<SonicSetObjectParameter *> getParameters() {
 				return parameters;
 			}
 
@@ -119,31 +124,31 @@ namespace LibGens {
 			void write(File *file, SonicStringTable *string_table);
 			void writeFixed(File *file);
 
-			void setPosition(Vector3 v) {
+			void setPosition(glm::vec3 v) {
 				position=v;
 			}
 
-			Vector3 getPosition() {
+			glm::vec3 getPosition() {
 				return position;
 			}
 
-			void setRotation(Quaternion v) {
+			void setRotation(glm::quat v) {
 				rotation=v;
 			}
 
-			Quaternion getRotation() {
+			glm::quat getRotation() {
 				return rotation;
 			}
 
-			string getType() {
+			std::string getType() {
 				return type;
 			}
 
-			string getName() {
+			std::string getName() {
 				return name;
 			}
 
-			void setName(string v) {
+			void setName(std::string v) {
 				name = v;
 			}
 
@@ -158,9 +163,9 @@ namespace LibGens {
 
 	class SonicSetGroup {
 		protected:
-			string name;
-			string type;
-			vector<unsigned int> values;
+			std::string name;
+			std::string type;
+			std::vector<unsigned int> values;
 
 			size_t file_address;
 			size_t parameter_address;
@@ -176,7 +181,7 @@ namespace LibGens {
 				values.clear();
 			}
 
-			vector<unsigned int> getValues() {
+			std::vector<unsigned int> getValues() {
 				return values;
 			}
 	};
@@ -184,26 +189,26 @@ namespace LibGens {
 
 	class SonicSet {
 		protected:
-			vector<SonicSetObject *> objects;
-			vector<SonicSetGroup *>  groups;
+			std::vector<SonicSetObject *> objects;
+			std::vector<SonicSetGroup *>  groups;
 			unsigned int table_size;
-			string name;
+			std::string name;
 			SonicStringTable string_table;
 		public:
 			SonicSet() {
 
 			}
 
-			SonicSet(string filename);
+			SonicSet(std::string filename);
 			void read(File *file);
-			void save(string filename);
+			void save(std::string filename);
 			void write(File *file);
 
-			void setName(string v) {
+			void setName(std::string v) {
 				name = v;
 			}
 
-			vector<SonicSetObject *> getObjects() {
+			std::vector<SonicSetObject *> getObjects() {
 				return objects;
 			}
 

@@ -17,11 +17,11 @@
 //    Read AUTHORS.txt, LICENSE.txt and COPYRIGHT.txt for more details.
 //=========================================================================
 
-#include "LibGens.h"
 #include "S06XnFile.h"
 
-namespace LibGens {
-	void SonicXNFile::saveDAE(string filename, bool only_animation, float unit_scale) {
+namespace LibS06 {
+/*
+	void SonicXNFile::saveDAE(std::string filename, bool only_animation, float unit_scale) {
 		TiXmlDocument doc;
 		TiXmlDeclaration *decl = new TiXmlDeclaration( "1.0", "", "" );
 		doc.LinkEndChild( decl );
@@ -74,10 +74,10 @@ namespace LibGens {
 		// Texture library
 		if (texture && !only_animation) {
 			TiXmlElement *imagesRoot = new TiXmlElement("library_images");
-			vector<string> textures = texture->getTextures();
+			std::vector<std::string> textures = texture->getTextures();
 
 
-			string target_folder = filename;
+			std::string target_folder = filename;
 			size_t sz=target_folder.size();
 			int last_slash=0;
 			for (size_t i=0; i<sz; i++) {
@@ -89,11 +89,11 @@ namespace LibGens {
 
 			CreateDirectory((target_folder+"textures").c_str(), NULL);
 			for (size_t j=0; j<textures.size(); j++) {
-				string tex_name=textures[j];
+				std::string tex_name=textures[j];
 				
 				size_t pos=tex_name.find(".gvr");
-				if (pos == string::npos) pos=tex_name.find(".GVR");
-				if (pos != string::npos) {
+				if (pos == std::string::npos) pos=tex_name.find(".GVR");
+				if (pos != std::string::npos) {
 					std::transform(tex_name.begin(), tex_name.end(), tex_name.begin(), ::tolower);
 					tex_name.replace(pos, 4, ".png");
 				}
@@ -102,16 +102,16 @@ namespace LibGens {
 				imageNode->SetAttribute("id", tex_name+"-image");
 				imageNode->SetAttribute("name", tex_name+"-image");
 
-				string nm="./textures/"+tex_name;
+				std::string nm="./textures/"+tex_name;
 				TiXmlElement *newElem = new TiXmlElement("init_from");
 				TiXmlText *text = new TiXmlText(nm);
 				newElem->LinkEndChild(text);
 				imageNode->LinkEndChild(newElem);
 
-				File texture(folder+tex_name, "rb");
-				if (texture.valid()) {
+				File texture(folder+tex_name, File::Style::Read);
+				if (texture.Valid()) {
 					texture.clone(target_folder + nm);
-					texture.close();
+					texture.Close();
 				}
 
 				imagesRoot->LinkEndChild(imageNode);
@@ -223,9 +223,9 @@ namespace LibGens {
 
 	void SonicXNObject::writeBonesDAE(TiXmlElement *root, size_t current, float unit_scale) {
 		printf("Writing bone %d...\n", current);
-		string bone_name=(bones_names ? bones_names->getName(current) : name+ToString(current));
+		std::string bone_name=(bones_names ? bones_names->getName(current) : name+ToString(current));
 
-		Error::addMessage(Error::WARNING, "Writing bone " + ToString(current) + " with name " + bone_name + " and Skinning Matrix Index " + ToString(bones[current]->matrix_index));
+		Error::AddMessage(Error::LogType::WARNING, "Writing bone " + ToString(current) + " with name " + bone_name + " and Skinning Matrix Index " + ToString(bones[current]->matrix_index));
 
 		printf("Writing bone with name %s...\n", bone_name.c_str());
 
@@ -235,8 +235,8 @@ namespace LibGens {
 		nodeRoot->SetAttribute("name", bone_name);
 		nodeRoot->SetAttribute("type", "JOINT");
 
-		Matrix4 m=bones[current]->current_matrix;
-		string nm="";
+		glm::mat4 m=bones[current]->current_matrix;
+		std::string nm="";
 		nm += ToString(m[0][0]) + " " + ToString(m[0][1]) + " " + ToString(m[0][2]) + " " + ToString(m[0][3] * unit_scale) + " ";
 		nm += ToString(m[1][0]) + " " + ToString(m[1][1]) + " " + ToString(m[1][2]) + " " + ToString(m[1][3] * unit_scale) + " ";
 		nm += ToString(m[2][0]) + " " + ToString(m[2][1]) + " " + ToString(m[2][2]) + " " + ToString(m[2][3] * unit_scale) + " ";
@@ -276,18 +276,18 @@ namespace LibGens {
 			skinRoot->LinkEndChild(bindShapeRoot);
 		}
 
-		vector<float> bone_weights;
-		vector< vector<unsigned int> > vertex_joint_map;
-		vector< vector<unsigned int> > vertex_weight_map;
+		std::vector<float> bone_weights;
+		std::vector<unsigned int> vertex_joint_map;
+		std::vector<unsigned int> vertex_weight_map;
 
 		// XNO and ZNO
 		for (size_t i=0; i<vertex_tables.size(); i++) {
-			vector<unsigned int> blending_table=vertex_tables[i]->bone_table;
+			std::vector<unsigned int> blending_table=vertex_tables[i]->bone_table;
 
 			for (size_t j=0; j<vertex_tables[i]->vertices.size(); j++) {
-				vector<unsigned int> joint_map;
-				vector<unsigned int> weight_map;
-				vector<SonicVertex *> vertices=vertex_tables[i]->vertices;
+				std::vector<unsigned int> joint_map;
+				std::vector<unsigned int> weight_map;
+				std::vector<SonicVertex *> vertices=vertex_tables[i]->vertices;
 
 				if (!blending_table.size()) {
 					joint_map.push_back(0);
@@ -388,8 +388,8 @@ namespace LibGens {
 			}
 
 			for (size_t j=0; j<vertex_resource_tables[i]->bones.size(); j++) {
-				vector<unsigned int> joint_map;
-				vector<unsigned int> weight_map;
+				std::vector<unsigned int> joint_map;
+				std::vector<unsigned int> weight_map;
 
 				SonicVertexBoneData *bone_data=&vertex_resource_tables[i]->bones[j];
 
@@ -454,9 +454,9 @@ namespace LibGens {
 			nameArray->SetAttribute("id", name+"-controller-Joints-array");
 			nameArray->SetAttribute("count", ToString(bones.size()));
 
-			string nm="";
+			std::string nm="";
 			for (size_t i=0; i<bones.size(); i++) {
-				string bone_name=(bones_names ? bones_names->getName(i) : name+ToString(i));
+				std::string bone_name=(bones_names ? bones_names->getName(i) : name+ToString(i));
 				nm += bone_name + " ";
 			}
 			TiXmlText *text = new TiXmlText(nm);
@@ -487,9 +487,9 @@ namespace LibGens {
 			floatArray->SetAttribute("id", name+"-controller-Matrices-array");
 			floatArray->SetAttribute("count", ToString(16*bones.size()));
 
-			string nm="";
+			std::string nm="";
 			for (size_t i=0; i<bones.size(); i++) {
-				Matrix4 m=bones[i]->matrix.transpose();
+				glm::mat4 m=bones[i]->matrix.transpose();
 
 				nm+=ToString(m[0][0]) + " " + ToString(m[0][1]) + " " + ToString(m[0][2]) + " " + ToString(m[0][3]*unit_scale) + " ";
 				nm+=ToString(m[1][0]) + " " + ToString(m[1][1]) + " " + ToString(m[1][2]) + " " + ToString(m[1][3]*unit_scale) + " ";
@@ -524,7 +524,7 @@ namespace LibGens {
 			floatArray->SetAttribute("id", name+"-controller-Weights-array");
 			floatArray->SetAttribute("count", ToString(bone_weights.size()));
 
-			string nm="";
+			std::string nm="";
 			for (size_t i=0; i<bone_weights.size(); i++) {
 				nm += ToString(bone_weights[i]) + " ";
 			}
@@ -580,7 +580,7 @@ namespace LibGens {
 			input->SetAttribute("source", "#"+name+"-controller-Weights");
 			sourceRoot->LinkEndChild(input);
 
-			string nm="";
+			std::string nm="";
 			for (size_t i=0; i<vertex_joint_map.size(); i++) {
 				nm+=ToString(vertex_joint_map[i].size())+" ";
 			}
@@ -617,15 +617,15 @@ namespace LibGens {
 		TiXmlElement *meshRoot = new TiXmlElement("mesh");
 		geometryRoot->LinkEndChild(meshRoot);
 
-		vector<int> pfaces;
+		std::vector<int> pfaces;
 		pfaces.clear();
 
-		vector<Vector3> base_vertices;
-		vector<Vector3> base_vert_normals;
-		vector<Vector2> base_uvs;
-		vector<Vector2> base_uvs_2;
-		vector<Color>   base_colors;
-		vector<Vector3> base_indices;
+		std::vector<glm::vec3> base_vertices;
+		std::vector<glm::vec3> base_vert_normals;
+		std::vector<glm::vec2> base_uvs;
+		std::vector<glm::vec2> base_uvs_2;
+		std::vector<glm::vec4> base_colors;
+		std::vector<glm::vec3> base_indices;
 
 		base_vertices.clear();
 		base_vert_normals.clear();
@@ -637,9 +637,9 @@ namespace LibGens {
 		printf("Creating Indices...\n");
 
 		unsigned int global_index=0;
-		vector<unsigned int> global_indices;
+		std::vector<unsigned int> global_indices;
 		for (size_t x=0; x<vertex_tables.size(); x++) {
-			vector<SonicVertex *> vertices = vertex_tables[x]->vertices;
+			std::vector<SonicVertex *> vertices = vertex_tables[x]->vertices;
 
 			for (size_t i=0; i<vertices.size(); i++) {
 				// Position
@@ -689,17 +689,17 @@ namespace LibGens {
 					pfaces.push_back(base_uvs_2.size()-1);
 				}
 
-				// Color
+				// glm::vec4
 				added=false;
 				for (size_t k=0; k<base_colors.size(); k++) {
-					if (base_colors[k] == Color(vertices[i]->rgba)) {
+					if (base_colors[k] == glm::vec4(vertices[i]->rgba)) {
 						pfaces.push_back(k);
 						added=true;
 						break;
 					}
 				}
 				if (!added) {
-					base_colors.push_back(Color(vertices[i]->rgba));
+					base_colors.push_back(glm::vec4(vertices[i]->rgba));
 					pfaces.push_back(base_colors.size()-1);
 				}
 			}
@@ -715,11 +715,11 @@ namespace LibGens {
 				for (size_t s=0; s<meshes[m]->submeshes.size(); s++) {
 					size_t indices_index=meshes[m]->submeshes[s]->indices_index;
 
-					vector<Vector3> indices_vector=index_tables[indices_index]->indices_vector;
+					std::vector<glm::vec3> indices_vector=index_tables[indices_index]->indices_vector;
 					global_index = global_indices[meshes[m]->submeshes[s]->vertex_index];
 
 					for (size_t i=0; i<indices_vector.size(); i++) {
-						Vector3 face;
+						glm::vec3 face;
 						face.x = indices_vector[i].x + global_index;
 						face.y = indices_vector[i].y + global_index;
 						face.z = indices_vector[i].z + global_index;
@@ -731,10 +731,10 @@ namespace LibGens {
 
 
 		if (file_mode == MODE_GNO) {
-			base_vert_normals.push_back(Vector3(1.0, 0.0, 0.0));
-			base_uvs.push_back(Vector2());
-			base_uvs_2.push_back(Vector2());
-			base_colors.push_back(Color(1.0, 1.0, 1.0, 1.0));
+			base_vert_normals.push_back(glm::vec3(1.0, 0.0, 0.0));
+			base_uvs.push_back(glm::vec2());
+			base_uvs_2.push_back(glm::vec2());
+			base_colors.push_back(glm::vec4(1.0, 1.0, 1.0, 1.0));
 		}
 
 		for (size_t x=0; x<vertex_resource_tables.size(); x++) {
@@ -774,7 +774,7 @@ namespace LibGens {
 			floatArray->SetAttribute("id", name+"-geometry-position-array");
 			floatArray->SetAttribute("count", ToString(base_vertices.size()*3));
 
-			string farray_string="";
+			std::string farray_string="";
 			for (size_t i=0; i<base_vertices.size(); i++) {
 				farray_string+=ToString(base_vertices[i].x*unit_scale)+" ";
 				farray_string+=ToString(base_vertices[i].y*unit_scale)+" ";
@@ -827,7 +827,7 @@ namespace LibGens {
 			floatArray->SetAttribute("id", name+"-geometry-normal-array");
 			floatArray->SetAttribute("count", ToString(base_vert_normals.size()*3));
 
-			string farray_string="";
+			std::string farray_string="";
 			for (size_t i=0; i<base_vert_normals.size(); i++) {
 				farray_string+=ToString(base_vert_normals[i].x)+" ";
 				farray_string+=ToString(base_vert_normals[i].y)+" ";
@@ -880,7 +880,7 @@ namespace LibGens {
 			floatArray->SetAttribute("id", name+"-geometry-uv-array");
 			floatArray->SetAttribute("count", ToString(base_uvs.size()*2));
 
-			string farray_string="";
+			std::string farray_string="";
 			for (size_t i=0; i<base_uvs.size(); i++) {
 				farray_string+=ToString(base_uvs[i].x)+" ";
 				farray_string+=ToString(1.0 - base_uvs[i].y)+" ";
@@ -928,7 +928,7 @@ namespace LibGens {
 			floatArray->SetAttribute("id", name+"-geometry-uv2-array");
 			floatArray->SetAttribute("count", ToString(base_uvs_2.size()*2));
 
-			string farray_string="";
+			std::string farray_string="";
 			for (size_t i=0; i<base_uvs_2.size(); i++) {
 				farray_string+=ToString(base_uvs_2[i].x)+" ";
 				farray_string+=ToString(1.0 - base_uvs_2[i].y)+" ";
@@ -976,7 +976,7 @@ namespace LibGens {
 			floatArray->SetAttribute("id", name+"-geometry-color-array");
 			floatArray->SetAttribute("count", ToString(base_colors.size()*4));
 
-			string farray_string="";
+			std::string farray_string="";
 			for (size_t i=0; i<base_colors.size(); i++) {
 				farray_string+=ToString(base_colors[i].r)+" ";
 				farray_string+=ToString(base_colors[i].g)+" ";
@@ -1045,7 +1045,7 @@ namespace LibGens {
 			for (size_t s=0; s<meshes[m]->submeshes.size(); s++) {
 				TiXmlElement *trianglesRoot = new TiXmlElement("triangles");
 				unsigned int mat_index = meshes[m]->submeshes[s]->material_index;
-				string mat_name = name + ToString(mat_index);
+				std::string mat_name = name + ToString(mat_index);
 				trianglesRoot->SetAttribute("material", mat_name);
 				{
 					inputVertex = new TiXmlElement("input");
@@ -1081,7 +1081,7 @@ namespace LibGens {
 					inputVertex->SetAttribute("set", "0");
 					trianglesRoot->LinkEndChild(inputVertex);
 
-					string pfaces_str="";
+					std::string pfaces_str="";
 					if (file_mode == MODE_GNO) {
 						unsigned int polygon_index=meshes[m]->submeshes[s]->indices_index;
 						size_t sz=polygon_tables[polygon_index]->faces.size();
@@ -1199,7 +1199,7 @@ namespace LibGens {
 
 		printf("Writing translation matrix...\n");
 		TiXmlElement *matrixNode = new TiXmlElement("matrix");
-		string matrix_str="1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0";
+		std::string matrix_str="1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0";
 		TiXmlText *text = new TiXmlText(matrix_str);
 		matrixNode->LinkEndChild(text);
 		nodeRoot->LinkEndChild(matrixNode);
@@ -1209,7 +1209,7 @@ namespace LibGens {
 
 	void SonicXNObject::writeMaterialDAE(TiXmlElement *root) {
 		for (size_t i=0; i<material_tables.size(); i++) {
-			string mat_name = name+ToString(i);
+			std::string mat_name = name+ToString(i);
 
 			TiXmlElement *materialNode = new TiXmlElement("material");
 			materialNode->SetAttribute("id", mat_name+"ID");
@@ -1224,7 +1224,7 @@ namespace LibGens {
 		}
 
 		for (size_t i=0; i<old_material_tables.size(); i++) {
-			string mat_name = name+ToString(i);
+			std::string mat_name = name+ToString(i);
 
 			TiXmlElement *materialNode = new TiXmlElement("material");
 			materialNode->SetAttribute("id", mat_name+"ID");
@@ -1245,7 +1245,7 @@ namespace LibGens {
 		TiXmlElement *techniqueRoot = new TiXmlElement("technique_common");
 	
 		for (size_t i=0; i<material_tables.size(); i++) {
-			string mat_name=name+ToString(i);
+			std::string mat_name=name+ToString(i);
 
 			TiXmlElement *instanceMaterial = new TiXmlElement("instance_material");
 			instanceMaterial->SetAttribute("symbol", mat_name);
@@ -1254,7 +1254,7 @@ namespace LibGens {
 		}
 
 		for (size_t i=0; i<old_material_tables.size(); i++) {
-			string mat_name=name+ToString(i);
+			std::string mat_name=name+ToString(i);
 
 			TiXmlElement *instanceMaterial = new TiXmlElement("instance_material");
 			instanceMaterial->SetAttribute("symbol", mat_name);
@@ -1267,7 +1267,7 @@ namespace LibGens {
 	}
 
 
-	void SonicXNObject::writeEffectTextureDAE(TiXmlElement *root, string tex_name) {
+	void SonicXNObject::writeEffectTextureDAE(TiXmlElement *root, std::string tex_name) {
 		TiXmlElement *newParam = new TiXmlElement("newparam");
 		newParam->SetAttribute("sid", tex_name+"-image-surface");
 
@@ -1302,7 +1302,7 @@ namespace LibGens {
 		root->LinkEndChild(newParam);
 	}
 
-	void SonicXNObject::writeEffectTechniqueDAE(TiXmlElement *root, string tex_name) {
+	void SonicXNObject::writeEffectTechniqueDAE(TiXmlElement *root, std::string tex_name) {
 		TiXmlElement *techniqueNode = new TiXmlElement("technique");
 		techniqueNode->SetAttribute("sid", "COMMON");
 
@@ -1329,7 +1329,7 @@ namespace LibGens {
 
 	void SonicXNObject::writeEffectsDAE(TiXmlElement *root, SonicXNTexture *texture) {
 		for (size_t m=0; m<material_tables.size(); m++) {
-			string mat_name = name+ToString(m);
+			std::string mat_name = name+ToString(m);
 
 			TiXmlElement *effectNode = new TiXmlElement("effect");
 			effectNode->SetAttribute("id", mat_name+"-effect");
@@ -1338,28 +1338,28 @@ namespace LibGens {
 			TiXmlElement *profileNode = new TiXmlElement("profile_COMMON");
 			{
 				if (file_mode == MODE_ZNO) {
-					vector<SonicTextureUnitZNO *> texture_units_zno=material_tables[m]->texture_units_zno;
+					std::vector<SonicTextureUnitZNO*> texture_units_zno=material_tables[m]->texture_units_zno;
 
 					for (size_t i=0; i<texture_units_zno.size(); i++) {
-						string tex_name=texture->getTexture(texture_units_zno[i]->index);
+						std::string tex_name=texture->getTexture(texture_units_zno[i]->index);
 						writeEffectTextureDAE(profileNode, tex_name);
 					}
 					
 					if (texture_units_zno.size()) {
-						string tex_name=texture->getTexture(texture_units_zno[0]->index);
+						std::string tex_name=texture->getTexture(texture_units_zno[0]->index);
 						writeEffectTechniqueDAE(profileNode, tex_name);
 					}
 				}
 				else {
-					vector<SonicTextureUnit *> texture_units=material_tables[m]->texture_units;
+					std::vector<SonicTextureUnit*> texture_units=material_tables[m]->texture_units;
 
 					for (size_t i=0; i<texture_units.size(); i++) {
-						string tex_name=texture->getTexture(texture_units[i]->index);
+						std::string tex_name=texture->getTexture(texture_units[i]->index);
 						writeEffectTextureDAE(profileNode, tex_name);
 					}
 
 					if (texture_units.size()) {
-						string tex_name=texture->getTexture(texture_units[0]->index);
+						std::string tex_name=texture->getTexture(texture_units[0]->index);
 						writeEffectTechniqueDAE(profileNode, tex_name);
 					}
 				}
@@ -1369,7 +1369,7 @@ namespace LibGens {
 		}
 
 		for (size_t m=0; m<old_material_tables.size(); m++) {
-			string mat_name = name+ToString(m);
+			std::string mat_name = name+ToString(m);
 
 			TiXmlElement *effectNode = new TiXmlElement("effect");
 			effectNode->SetAttribute("id", mat_name+"-effect");
@@ -1380,11 +1380,11 @@ namespace LibGens {
 				unsigned int texture_unit=old_material_tables[m]->texture_unit;
 				printf("Effect's texture unit is %d...\n", texture_unit);
 
-				string tex_name=texture->getTexture(texture_unit);
+				std::string tex_name=texture->getTexture(texture_unit);
 
 				size_t pos=tex_name.find(".gvr");
-				if (pos == string::npos) pos=tex_name.find(".GVR");
-				if (pos != string::npos) {
+				if (pos == std::string::npos) pos=tex_name.find(".GVR");
+				if (pos != std::string::npos) {
 					std::transform(tex_name.begin(), tex_name.end(), tex_name.begin(), ::tolower);
 					tex_name.replace(pos, 4, ".png");
 				}
@@ -1421,7 +1421,7 @@ namespace LibGens {
 			SonicMotionControl *sca_z_motion_control = getScaleZMotionControl(b);
 
 			TiXmlElement *animationNode = new TiXmlElement("animation");
-			string bone_name=object->name+ToString(b);
+			std::string bone_name=object->name+ToString(b);
 			if (bones) bone_name=bones->getName(b);
 
 			animationNode->SetAttribute("id", bone_name+"-anim");
@@ -1435,7 +1435,7 @@ namespace LibGens {
 					TiXmlElement *matrixAnimationInputArrayNode = new TiXmlElement("float_array");
 					matrixAnimationInputArrayNode->SetAttribute("id", bone_name+"-Matrix-animation-input-array");
 					matrixAnimationInputArrayNode->SetAttribute("count", frame_length_i);
-					string text="";
+					std::string text="";
 					for (size_t i=0; i<frame_length_i; i++) {
 						text += ToString((float)i/30.0) + " ";
 					}
@@ -1467,24 +1467,24 @@ namespace LibGens {
 					SonicBone *bone=object->bones[b];
 
 					// Set frame initial values
-					Vector3 position = bone->translation;
-					Vector3 scale = bone->scale;
-					Quaternion orientation = bone->orientation;
+					glm::vec3 position = bone->translation;
+					glm::vec3 scale = bone->scale;
+					glm::quat orientation = bone->orientation;
 
-					Matrix3 mr;
+					glm::mat3 mr;
 					float bone_rot_x, bone_rot_y, bone_rot_z;
 					unsigned short rot_x_ref, rot_y_ref, rot_z_ref;
 					unsigned int rotation_flag=object->bones[b]->flag & 3840u;
 
-					bone_rot_x = bone->rotation_x * LIBGENS_MATH_INT32_TO_RAD;
-					bone_rot_y = bone->rotation_y * LIBGENS_MATH_INT32_TO_RAD;
-					bone_rot_z = bone->rotation_z * LIBGENS_MATH_INT32_TO_RAD;
+					bone_rot_x = bone->rotation_x * MathConstants::i32ToRadian;
+					bone_rot_y = bone->rotation_y * MathConstants::i32ToRadian;
+					bone_rot_z = bone->rotation_z * MathConstants::i32ToRadian;
 
-					rot_x_ref = (bone_rot_x / LIBGENS_MATH_PI * 32767.5f);
-					rot_y_ref = (bone_rot_y / LIBGENS_MATH_PI * 32767.5f);
-					rot_z_ref = (bone_rot_z / LIBGENS_MATH_PI * 32767.5f);
+					rot_x_ref = (bone_rot_x / MathConstants::Pi * 32767.5f);
+					rot_y_ref = (bone_rot_y / MathConstants::Pi * 32767.5f);
+					rot_z_ref = (bone_rot_z / MathConstants::Pi * 32767.5f);
 
-					string text="";
+					std::string text="";
 					for (size_t i=0; i<frame_length_i; i++) {
 						float rot_x=bone_rot_x;
 						float rot_y=bone_rot_y;
@@ -1500,40 +1500,40 @@ namespace LibGens {
 
 						bool update_quaternion=false;
 						if (rot_x_motion_control) {
-							rot_x = rot_x_motion_control->getFrameValue(i, rot_x_ref) / 65535.0f * (LIBGENS_MATH_PI*2);
+							rot_x = rot_x_motion_control->getFrameValue(i, rot_x_ref) / 65535.0f * (MathConstants::Pi*2);
 							update_quaternion = true;
 						}
 
 						if (rot_y_motion_control) {
-							rot_y = rot_y_motion_control->getFrameValue(i, rot_y_ref) / 65535.0f * (LIBGENS_MATH_PI*2);
+							rot_y = rot_y_motion_control->getFrameValue(i, rot_y_ref) / 65535.0f * (MathConstants::Pi*2);
 							update_quaternion = true;
 						}
 
 						if (rot_z_motion_control) {
-							rot_z = rot_z_motion_control->getFrameValue(i, rot_z_ref) / 65535.0f * (LIBGENS_MATH_PI*2);
+							rot_z = rot_z_motion_control->getFrameValue(i, rot_z_ref) / 65535.0f * (MathConstants::Pi*2);
 							update_quaternion = true;
 						}
 
 						if (rot_beta_x_motion_control) {
-							rot_x = rot_beta_x_motion_control->getFrameValue(i, rot_x_ref) / 65535.0f * (LIBGENS_MATH_PI*2);
+							rot_x = rot_beta_x_motion_control->getFrameValue(i, rot_x_ref) / 65535.0f * (MathConstants::Pi*2);
 							update_quaternion = true;
 						}
 
 						if (rot_beta_y_motion_control) {
-							rot_y = rot_beta_y_motion_control->getFrameValue(i, rot_y_ref) / 65535.0f * (LIBGENS_MATH_PI*2);
+							rot_y = rot_beta_y_motion_control->getFrameValue(i, rot_y_ref) / 65535.0f * (MathConstants::Pi*2);
 							update_quaternion = true;
 						}
 
 						if (rot_beta_z_motion_control) {
-							rot_z = rot_beta_z_motion_control->getFrameValue(i, rot_z_ref) / 65535.0f * (LIBGENS_MATH_PI*2);
+							rot_z = rot_beta_z_motion_control->getFrameValue(i, rot_z_ref) / 65535.0f * (MathConstants::Pi*2);
 							update_quaternion = true;
 						}
 
 						if (rot_motion_control) {
-							Vector3 rotation_vector = rot_motion_control->getFrameVector(i, Vector3(rot_x, rot_y, rot_z));
-							rot_x = rotation_vector.x  / 65535.0f * (LIBGENS_MATH_PI*2);
-							rot_y = rotation_vector.y  / 65535.0f * (LIBGENS_MATH_PI*2);
-							rot_z = rotation_vector.z  / 65535.0f * (LIBGENS_MATH_PI*2);
+							glm::vec3 rotation_vector = rot_motion_control->getFrameVector(i, glm::vec3(rot_x, rot_y, rot_z));
+							rot_x = rotation_vector.x  / 65535.0f * (MathConstants::Pi*2);
+							rot_y = rotation_vector.y  / 65535.0f * (MathConstants::Pi*2);
+							rot_z = rotation_vector.z  / 65535.0f * (MathConstants::Pi*2);
 							update_quaternion = true;
 						}
 						
@@ -1555,7 +1555,7 @@ namespace LibGens {
 						}
 						
 
-						Matrix4 m;
+						glm::mat4 m;
 						m.makeTransform(position*unit_scale, scale, orientation);
 						
 						for (size_t x=0; x<4; x++) {
@@ -1590,7 +1590,7 @@ namespace LibGens {
 					interpolationsArrayNode->SetAttribute("id", bone_name+"-Interpolations-array");
 					interpolationsArrayNode->SetAttribute("count", frame_length_i);
 
-					string text="";
+					std::string text="";
 					for (size_t i=0; i<frame_length_i; i++) {
 						text += "LINEAR ";
 					}
@@ -1643,4 +1643,5 @@ namespace LibGens {
 			root->LinkEndChild(animationNode);
 		}
 	}
+*/
 }

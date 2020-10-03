@@ -17,16 +17,15 @@
 //    Read AUTHORS.txt, LICENSE.txt and COPYRIGHT.txt for more details.
 //=========================================================================
 
-#include "LibGens.h"
 #include "S06Set.h"
 
-namespace LibGens {
-	SonicSet::SonicSet(string filename) {
-		File file(filename, LIBGENS_FILE_READ_BINARY);
+namespace LibS06 {
+	SonicSet::SonicSet(std::string filename) {
+		File file(filename, File::Style::Read);
 
-		if (file.valid()) {
+		if (file.Valid()) {
 			read(&file);
-			file.close();
+			file.Close();
 		}
 	}
 
@@ -40,83 +39,83 @@ namespace LibGens {
 
 	void SonicSetObjectParameter::read(File *file) {
 		if (!file) {
-			Error::addMessage(Error::NULL_REFERENCE, LIBGENS_S06_SET_ERROR_MESSAGE_NULL_FILE);
+			Error::AddMessage(Error::LogType::NULL_REFERENCE, LIBS06_SET_ERROR_MESSAGE_NULL_FILE);
 			return;
 		}
 
-		size_t header_address=file->getCurrentAddress();
+		size_t header_address=file->GetCurrentAddress();
 		size_t address=0;
 		unsigned int total=0;
 
-		file->readInt32BE(&type);
+		type = file->Read<u32>(Endianess::Big);
 
 		// Boolean
 		if (type == 0) {
-			file->readInt32BE(&value_i);
+			value_i = file->Read<u32>(Endianess::Big);
 		}
 		// Integer
 		else if (type == 1) {
-			file->readInt32BE(&value_i);
+			value_i = file->Read<u32>(Endianess::Big);
 		}
 		// Float
 		else if (type == 2) {
-			file->readFloat32BE(&value_f);
+			value_f = file->Read<f32>(Endianess::Big);
 		}
-		// Read string
+		// Read std::string
 		else if (type == 3) {
-			size_t offset_address=file->getCurrentAddress();
-			file->readInt32BEA(&address);
-			file->readInt32BE(&total);
-			file->goToAddress(address);
-			file->readString(&value_s);
+			size_t offset_address=file->GetCurrentAddress();
+			address = file->Read<u32>(Endianess::Big);
+			total = file->Read<u32>(Endianess::Big);
+			file->SetAddress(address);
+			value_s = file->ReadNullTerminatedString();
 		}
-		// Vector3
+		// glm::vec3
 		else if (type == 4) {
-			value_v.read(file);
+			value_v = file->Read<glm::vec3>(Endianess::Big);
 		}
 		// Target another object
 		else if (type == 6) {
-			file->readInt32BE(&value_i);
+			value_i = file->Read<u32>(Endianess::Big);
 		}
 	}
 
 	
 	void SonicSetObjectParameter::write(File *file, SonicStringTable *string_table) {
 		if (!file) {
-			Error::addMessage(Error::NULL_REFERENCE, LIBGENS_S06_SET_ERROR_MESSAGE_WRITE_NULL_FILE);
+			Error::AddMessage(Error::LogType::NULL_REFERENCE, LIBS06_SET_ERROR_MESSAGE_WRITE_NULL_FILE);
 			return;
 		}
 		
-		size_t header_address=file->getCurrentAddress();
-		file->writeInt32BE(&type);
+		size_t header_address=file->GetCurrentAddress();
+		file->Write<u32>(type, Endianess::Big);
 
 		if (type == 0) {
-			file->writeInt32BE(&value_i);
-			file->writeNull(12);
+			file->Write<u32>(value_i, Endianess::Big);
+			file->WriteByte(0, 12);
 		}
 		else if (type == 1) {
-			file->writeInt32BE(&value_i);
-			file->writeNull(12);
+			file->Write<u32>(value_i, Endianess::Big);
+			file->WriteByte(0, 12);
 		}
 		else if (type == 2) {
-			file->writeFloat32BE(&value_f);
-			file->writeNull(12);
+			file->Write<f32>(value_f, Endianess::Big);
+			file->WriteByte(0, 12);
 		}
 		else if (type == 3) {
 			string_table->writeString(file, value_s);
 			unsigned int total=1;
 			unsigned int size=value_s.size()+1;
-			file->writeInt32BE(&total);
-			file->writeNull(4);
-			file->writeInt32BE(&size);
+			file->Write<u32>(total, Endianess::Big);
+			file->WriteByte(0, 4);
+			file->Write<u32>(size, Endianess::Big);
 		}
 		else if (type == 4) {
-			value_v.write(file);
-			file->writeNull(4);
+			file->Write<glm::vec3>(value_v, Endianess::Big);
+			file->WriteByte(0, 4);
 		}
 		else if (type == 6) {
-			file->writeInt32BE(&value_i);
-			file->writeNull(12);
+			file->Write<u32>(value_i, Endianess::Big);
+			file->WriteByte(0, 12);
 		}
 	}
 
@@ -138,36 +137,32 @@ namespace LibGens {
 	
 	void SonicSetObject::read(File *file) {
 		if (!file) {
-			Error::addMessage(Error::NULL_REFERENCE, LIBGENS_S06_SET_ERROR_MESSAGE_NULL_FILE);
+			Error::AddMessage(Error::LogType::NULL_REFERENCE, LIBS06_SET_ERROR_MESSAGE_NULL_FILE);
 			return;
 		}
 
-		size_t header_address=file->getCurrentAddress();
-		size_t address=0;
+		size_t header_address=file->GetCurrentAddress();
 
-		size_t name_1_address=0;
-		size_t name_2_address=0;
-		unsigned int parameter_total=0;
 		size_t parameter_address=0;
 
-		file->readInt32BEA(&name_1_address);
-		size_t name_2_offset_address=file->getCurrentAddress();
-		file->readInt32BEA(&name_2_address);
-		file->readFloat32BE(&unknown);
-		file->moveAddress(12);
-		position.read(file);
-		file->readFloat32BE(&unknown_2);
-		rotation.read(file);
-		file->readInt32BE(&parameter_total);
+		size_t name_1_address = file->ReadAddress(Endianess::Big);
+		size_t name_2_offset_address=file->GetCurrentAddress();
+		size_t name_2_address = file->ReadAddress(Endianess::Big);
+		unknown = file->Read<f32>(Endianess::Big);
+		file->OffsetAddress(12);
+		position = file->Read<glm::vec3>();
+		unknown_2 = file->Read<f32>(Endianess::Big);
+		rotation = file->Read<glm::quat>();
+		unsigned int parameter_total = file->Read<u32>(Endianess::Big);
 
 		if (parameter_total) {
-			file->readInt32BEA(&parameter_address);
+			parameter_address = file->ReadAddress(Endianess::Big);
 		}
 
-		file->goToAddress(name_1_address);
-		file->readString(&name);
-		file->goToAddress(name_2_address);
-		file->readString(&type);
+		file->SetAddress(name_1_address);
+		name = file->ReadNullTerminatedString();
+		file->SetAddress(name_2_address);
+		type = file->ReadNullTerminatedString();
 
 		if (!parameter_total) {
 
@@ -177,7 +172,7 @@ namespace LibGens {
 		}
 
 		for (size_t i=0; i<parameter_total; i++) {
-			file->goToAddress(parameter_address + i*20);
+			file->SetAddress(parameter_address + i*20);
 
 			SonicSetObjectParameter *parameter = new SonicSetObjectParameter();
 			parameter->read(file);
@@ -189,35 +184,35 @@ namespace LibGens {
 	
 	void SonicSetObject::write(File *file, SonicStringTable *string_table) {
 		if (!file) {
-			Error::addMessage(Error::NULL_REFERENCE, LIBGENS_S06_SET_ERROR_MESSAGE_WRITE_NULL_FILE);
+			Error::AddMessage(Error::LogType::NULL_REFERENCE, LIBS06_SET_ERROR_MESSAGE_WRITE_NULL_FILE);
 			return;
 		}
 		
-		size_t header_address=file->getCurrentAddress();
+		size_t header_address=file->GetCurrentAddress();
 		file_address = header_address;
 
 		string_table->writeString(file, name);
 		string_table->writeString(file, type);
-		file->writeFloat32BE(&unknown);
-		file->writeNull(12);
-		position.write(file);
-		file->writeFloat32BE(&unknown_2);
-		rotation.write(file);
+		file->Write<f32>(unknown, Endianess::Big);
+		file->WriteByte(0, 12);
+		file->Write<glm::vec3>(position, Endianess::Big);
+		file->Write<f32>(unknown_2, Endianess::Big);
+		file->Write<glm::quat>(rotation, Endianess::Big);
 		unsigned int parameter_total=parameters.size();
-		file->writeInt32BE(&parameter_total);
-		file->writeNull(4);
+		file->Write<u32>(parameter_total, Endianess::Big);
+		file->WriteByte(0, 4);
 	}
 
 	void SonicSetObject::writeFixed(File *file) {
 		if (!file) {
-			Error::addMessage(Error::NULL_REFERENCE, LIBGENS_S06_SET_ERROR_MESSAGE_WRITE_NULL_FILE);
+			Error::AddMessage(Error::LogType::NULL_REFERENCE, LIBS06_SET_ERROR_MESSAGE_WRITE_NULL_FILE);
 			return;
 		}
 
-		file->goToAddress(file_address+60);
+		file->SetAddress(file_address+60);
 
 		if (parameters.size() > 0) {
-			file->writeInt32BEA(&parameter_address);
+			file->WriteAddress(parameter_address, Endianess::Big);
 		}
 	}
 
@@ -225,118 +220,106 @@ namespace LibGens {
 
 	void SonicSetGroup::read(File *file) {
 		if (!file) {
-			Error::addMessage(Error::NULL_REFERENCE, LIBGENS_S06_SET_ERROR_MESSAGE_NULL_FILE);
+			Error::AddMessage(Error::LogType::NULL_REFERENCE, LIBS06_SET_ERROR_MESSAGE_NULL_FILE);
 			return;
 		}
 
-		size_t header_address=file->getCurrentAddress();
+		size_t header_address=file->GetCurrentAddress();
 
-		size_t name_address=0;
-		size_t type_address=0;
-		unsigned int values_total=0;
-		size_t values_address=0;
+		size_t name_address = file->ReadAddress(Endianess::Big);
+		size_t type_address = file->ReadAddress(Endianess::Big);
+		unsigned int values_total = file->Read<u32>(Endianess::Big);
+		size_t values_address = file->ReadAddress(Endianess::Big);
 
-		file->readInt32BEA(&name_address);
-		file->readInt32BEA(&type_address);
-		file->readInt32BE(&values_total);
-		file->readInt32BEA(&values_address);
+		file->SetAddress(name_address);
+		name = file->ReadNullTerminatedString();
 
-		file->goToAddress(name_address);
-		file->readString(&name);
-
-		file->goToAddress(type_address);
-		file->readString(&type);
+		file->SetAddress(type_address);
+		type = file->ReadNullTerminatedString();
 
 		for (unsigned int i=0; i<values_total; i++) {
 			unsigned int value=0;
-			file->goToAddress(values_address + i*8 + 4);
-			file->readInt32BE(&value);
+			file->SetAddress(values_address + i*8 + 4);
+			value = file->Read<i32>(Endianess::Big);
 			values.push_back(value);
 		}
 
-		Error::printfMessage(Error::LOG, "%s - %s:", name.c_str(), type.c_str());
+		Error::printfMessage(Error::LogType::LOG, "%s - %s:", name.c_str(), type.c_str());
 	}
 
 	
 	
 	void SonicSetGroup::write(File *file, SonicStringTable *string_table) {
 		if (!file) {
-			Error::addMessage(Error::NULL_REFERENCE, LIBGENS_S06_SET_ERROR_MESSAGE_WRITE_NULL_FILE);
+			Error::AddMessage(Error::LogType::NULL_REFERENCE, LIBS06_SET_ERROR_MESSAGE_WRITE_NULL_FILE);
 			return;
 		}
 		
-		size_t header_address=file->getCurrentAddress();
+		size_t header_address=file->GetCurrentAddress();
 		file_address = header_address;
 
 		string_table->writeString(file, name);
 		string_table->writeString(file, type);
 		unsigned int values_total=values.size();
-		file->writeInt32BE(&values_total);
-		file->writeNull(4);
+		file->Write<u32>(values_total, Endianess::Big);
+		file->WriteByte(0, 4);
 	}
 
 	void SonicSetGroup::writeValues(File *file) {
 		if (!file) {
-			Error::addMessage(Error::NULL_REFERENCE, LIBGENS_S06_SET_ERROR_MESSAGE_WRITE_NULL_FILE);
+			Error::AddMessage(Error::LogType::NULL_REFERENCE, LIBS06_SET_ERROR_MESSAGE_WRITE_NULL_FILE);
 			return;
 		}
 		
-		parameter_address = file->getCurrentAddress();
+		parameter_address = file->GetCurrentAddress();
 		for (size_t i=0; i<values.size(); i++) {
 			unsigned int value=values[i];
-			file->writeNull(4);
-			file->writeInt32BE(&value);
+			file->WriteByte(0, 4);
+			file->Write<u32>(value, Endianess::Big);
 		}
 	}
 
 	void SonicSetGroup::writeFixed(File *file) {
 		if (!file) {
-			Error::addMessage(Error::NULL_REFERENCE, LIBGENS_S06_SET_ERROR_MESSAGE_WRITE_NULL_FILE);
+			Error::AddMessage(Error::LogType::NULL_REFERENCE, LIBS06_SET_ERROR_MESSAGE_WRITE_NULL_FILE);
 			return;
 		}
 
-		file->goToAddress(file_address + 12);
+		file->SetAddress(file_address + 12);
 
 		if (values.size()) {
-			file->writeInt32BEA(&parameter_address);
+			file->WriteAddress(parameter_address, Endianess::Big);
 		}
 	}
 
 
 	void SonicSet::read(File *file) {
 		if (!file) {
-			Error::addMessage(Error::NULL_REFERENCE, LIBGENS_S06_SET_ERROR_MESSAGE_NULL_FILE);
+			Error::AddMessage(Error::LogType::NULL_REFERENCE, LIBS06_SET_ERROR_MESSAGE_NULL_FILE);
 			return;
 		}
 
-		size_t header_address=file->getCurrentAddress();
+		size_t header_address=file->GetCurrentAddress();
 		size_t address=0;
 
-		
-		unsigned int file_size=0;
-		size_t banana_table_address=0;
-		file->setRootNodeAddress(32);
-		file->readInt32BE(&file_size);
-		file->readInt32BEA(&banana_table_address);
-		file->readInt32BE(&table_size);
+		file->SetRootNodeAddress(32);
+		unsigned int file_size = file->Read<u32>(Endianess::Big);
+		size_t banana_table_address = file->ReadAddress(Endianess::Big);
+		table_size = file->Read<u32>(Endianess::Big);
 
-		file->goToAddress(44);
-		file->readString(&name);
+		file->SetAddress(44);
+		name = file->ReadNullTerminatedString();
 
-		file->goToAddress(76);
+		file->SetAddress(76);
 
-		unsigned int object_total=0;
-		size_t object_address=0;
-		file->readInt32BE(&object_total);
-		file->readInt32BEA(&object_address);
+		unsigned int object_total = file->Read<u32>(Endianess::Big);
+		size_t object_address = file->ReadAddress(Endianess::Big);
 
-		unsigned int group_total=0;
-		size_t group_address=0;
-		file->readInt32BE(&group_total);
-		file->readInt32BEA(&group_address);
+		unsigned int group_total = file->Read<u32>(Endianess::Big);
+		size_t group_address = file->ReadAddress(Endianess::Big);
 
 		for (size_t i=0; i<object_total; i++) {
-			file->goToAddress(object_address + i*64);
+			file->SetAddress(object_address + i*64);
 			SonicSetObject *object=new SonicSetObject();
 			object->read(file);
 			objects.push_back(object);
@@ -344,108 +327,108 @@ namespace LibGens {
 
 
 		for (size_t i=0; i<group_total; i++) {
-			file->goToAddress(group_address + i*16);
+			file->SetAddress(group_address + i*16);
 			SonicSetGroup *group=new SonicSetGroup();
 			group->read(file);
 			groups.push_back(group);
 
-			vector<unsigned int> values = group->getValues();
+			std::vector<unsigned int> values = group->getValues();
 
 			for (size_t j=0; j<values.size(); j++) {
-				Error::printfMessage(Error::LOG, "  %d: %s", values[j], objects[values[j]]->getName().c_str());
+				Error::printfMessage(Error::LogType::LOG, "  %d: %s", values[j], objects[values[j]]->getName().c_str());
 			}
 		}
 
-		file->goToAddress(banana_table_address);
-		file->readAddressTableBBIN(table_size);
+		file->SetAddress(banana_table_address);
+		file->ReadAddressTableBBIN(table_size);
 	}
 
 	
-	void SonicSet::save(string filename) {
-		File file(filename, LIBGENS_FILE_WRITE_BINARY);
+	void SonicSet::save(std::string filename) {
+		File file(filename, File::Style::Write);
 
-		if (file.valid()) {
+		if (file.Valid()) {
 			write(&file);
-			file.close();
+			file.Close();
 		}
 	}
 
 	void SonicSet::write(File *file) {
 		if (!file) {
-			Error::addMessage(Error::NULL_REFERENCE, LIBGENS_S06_SET_ERROR_MESSAGE_WRITE_NULL_FILE);
+			Error::AddMessage(Error::LogType::NULL_REFERENCE, LIBS06_SET_ERROR_MESSAGE_WRITE_NULL_FILE);
 			return;
 		}
 
 		string_table.clear();
 
-		file->setRootNodeAddress(32);
+		file->SetRootNodeAddress(32);
 
-		file->writeNull(22);
-		string header="1BBINA";
-		file->writeString(&header);
-		file->fixPadding(44);
-		file->writeString(&name);
-		file->fixPadding(76);
+		file->WriteByte(0, 22);
+		std::string header="1BBINA";
+		file->WriteNullTerminatedString(header.c_str());
+		file->FixPadding(44);
+		file->WriteNullTerminatedString(name.c_str());
+		file->FixPadding(76);
 
 		unsigned int object_total=objects.size();
-		file->writeInt32BE(&object_total);
-		size_t object_address=file->getCurrentAddress();
-		file->writeNull(4);
+		file->Write<u32>(object_total, Endianess::Big);
+		size_t object_address=file->GetCurrentAddress();
+		file->WriteByte(0, 4);
 
 		unsigned int group_total=groups.size();
-		file->writeInt32BE(&group_total);
-		size_t group_address=file->getCurrentAddress();
-		file->writeNull(4);
+		file->Write<u32>(group_total, Endianess::Big);
+		size_t group_address=file->GetCurrentAddress();
+		file->WriteByte(0, 4);
 
-		size_t object_table_address=file->getCurrentAddress();
+		size_t object_table_address=file->GetCurrentAddress();
 		for (size_t i=0; i<object_total; i++) objects[i]->write(file, &string_table);
 		for (size_t i=0; i<object_total; i++) {
-			vector<SonicSetObjectParameter *> parameters=objects[i]->getParameters();
-			objects[i]->setAddress(file->getCurrentAddress());
+			std::vector<SonicSetObjectParameter *> parameters=objects[i]->getParameters();
+			objects[i]->setAddress(file->GetCurrentAddress());
 			for (size_t j=0; j<parameters.size(); j++) {
 				parameters[j]->write(file, &string_table);
 			}
 		}
 		for (size_t i=0; i<object_total; i++) objects[i]->writeFixed(file);
-		file->goToEnd();
+		file->GoToEnd();
 
-		size_t group_table_address=file->getCurrentAddress();
+		size_t group_table_address=file->GetCurrentAddress();
 		for (size_t i=0; i<group_total; i++) groups[i]->write(file, &string_table);
 		for (size_t i=0; i<group_total; i++) groups[i]->writeValues(file);
 		for (size_t i=0; i<group_total; i++) groups[i]->writeFixed(file);
-		file->goToEnd();
+		file->GoToEnd();
 
 		string_table.write(file);
-		file->fixPadding(4);
+		file->FixPadding(4);
 
-		file->goToAddress(object_address);
-		file->writeInt32BEA(&object_table_address);
+		file->SetAddress(object_address);
+		file->WriteAddress(object_table_address, Endianess::Big);
 
-		file->goToAddress(group_address);
+		file->SetAddress(group_address);
 		if (group_total) {
-			file->writeInt32BEA(&group_table_address);
+			file->WriteAddress(group_table_address, Endianess::Big);
 		}
 		
-		file->goToEnd();
-		size_t table_address=file->getCurrentAddress() - 32;
-		file->sortAddressTable();
+		file->GoToEnd();
+		u32 table_address = file->GetCurrentAddress() - 32;
+		file->SortAddressTable();
 
-		list<size_t> file_address_table = file->getAddressTable();
+		std::list<size_t> file_address_table = file->GetAddressTable();
 		file->writeAddressTableBBIN();
-		file->fixPadding(8);
+		file->FixPadding(8);
 
-		unsigned int file_size=file->getFileSize();
+		unsigned int file_size = file->GetFileSize();
 		unsigned int table_size = (file_size - 32) - table_address;
-		file->goToAddress(0);
-		file->writeInt32BE(&file_size);
-		file->writeInt32BE(&table_address);
-		file->writeInt32BE(&table_size);
+		file->SetAddress(0);
+		file->Write<u32>(file_size, Endianess::Big);
+		file->Write<u32>(table_address, Endianess::Big);
+		file->Write<u32>(table_size, Endianess::Big);
 	}
 
 	void SonicSet::fixDuplicateNames() {
 		for (size_t i=0; i<objects.size(); i++) {
 			bool found=true;
-			string object_name = objects[i]->getName();
+			std::string object_name = objects[i]->getName();
 			size_t index = 0;
 
 			while (found) {

@@ -1,13 +1,8 @@
-cmake_minimum_required(VERSION 3.16 FATAL_ERROR) 
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)  
-project(libS06 CXX C)
+add_library(LibS06)
 
-add_executable(libS06)
-
-target_sources(libS06
+target_sources(LibS06
     PRIVATE
         File.hpp
-        main.cpp
         S06Collision.cpp
         S06Collision.h
         S06Common.cpp
@@ -35,7 +30,12 @@ target_sources(libS06
         S06XnTexture.cpp
 )
 
-target_include_directories(libS06 
+target_link_libraries(LibS06
+    PUBLIC 
+        glm
+)
+
+target_include_directories(LibS06 
     PUBLIC 
         ../dependencies/half
         ../dependencies/sha1

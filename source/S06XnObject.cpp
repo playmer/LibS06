@@ -17,51 +17,38 @@
 //    Read AUTHORS.txt, LICENSE.txt and COPYRIGHT.txt for more details.
 //=========================================================================
 
-#include "LibGens.h"
 #include "S06XnFile.h"
 
-namespace LibGens {
+namespace LibS06 {
 	void SonicXNObject::read(File *file) {
 		SonicXNSection::read(file);
 
-		size_t table_address=0;
-		file->readInt32EA(&table_address, big_endian);
-		file->readInt32E(&header_flag, big_endian);
-		file->goToAddress(table_address);
+		size_t table_address  = file->ReadAddress(big_endian);
+		header_flag = file->Read<u32>();
+		file->SetAddress(table_address);
 
 		// Mesh Header
-		center.read(file, big_endian);
-		file->readFloat32E(&radius, big_endian);
+		center = file->Read<glm::vec3>();
+		radius = file->Read<f32>();
 
-		unsigned int material_parts_count=0;
-		size_t material_parts_address=0;
-		unsigned int vertex_parts_count=0;
-		size_t vertex_parts_address=0;
-		unsigned int index_parts_count=0;
-		size_t index_parts_address=0;
-		unsigned int bone_parts_count=0;
-		size_t bone_set_address=0;
-		unsigned int mesh_count=0;
-		size_t mesh_address=0;
-
-		file->readInt32E(&material_parts_count, big_endian);
-		file->readInt32EA(&material_parts_address, big_endian);
-		file->readInt32E(&vertex_parts_count, big_endian);
-		file->readInt32EA(&vertex_parts_address, big_endian);
-		file->readInt32E(&index_parts_count, big_endian);
-		file->readInt32EA(&index_parts_address, big_endian);
-		file->readInt32E(&bone_parts_count, big_endian);
-		file->readInt32E(&bone_max_depth, big_endian);
-		file->readInt32EA(&bone_set_address, big_endian);
-		file->readInt32E(&bone_matrix_count, big_endian);
-		file->readInt32E(&mesh_count, big_endian);
-		file->readInt32EA(&mesh_address, big_endian);
-		file->readInt32E(&total_texture_count, big_endian);
+		unsigned int material_parts_count= file->Read<u32>();
+		size_t material_parts_address = file->ReadAddress(big_endian);
+		unsigned int vertex_parts_count = file->Read<u32>();
+		size_t vertex_parts_address = file->ReadAddress(big_endian);
+		unsigned int index_parts_count= file->Read<u32>();
+		size_t index_parts_address = file->ReadAddress(big_endian);
+		unsigned int bone_parts_count = file->Read<u32>();
+		bone_max_depth = file->Read<u32>();
+		size_t bone_set_address = file->ReadAddress(big_endian);
+		bone_matrix_count= file->Read<u32>();
+		unsigned int mesh_count = file->Read<u32>();
+		size_t mesh_address = file->ReadAddress(big_endian);
+		total_texture_count = file->Read<u32>();
 
 		if (file_mode == MODE_ZNO) {
-			file->readInt32E(&type, big_endian);
-			file->readInt32E(&version, big_endian);
-			bounding_box.read(file, big_endian);
+			type = file->Read<i32>();
+			version = file->Read<i32>();
+			bounding_box = file->Read<glm::vec3>();
 		}
 
 		printf("Object Header Totals:\n Material Tables: %d\n Vertex Tables: %d\n Index Tables: %d\n Bone Tables: %d\n Meshes: %d\n\n", 
@@ -69,7 +56,7 @@ namespace LibGens {
 
 		if (file_mode == MODE_GNO) {
 			for (size_t i=0; i<material_parts_count; i++) {
-				file->goToAddress(material_parts_address + i*8);
+				file->SetAddress(material_parts_address + i*8);
 
 				SonicOldMaterialTable *old_material_table = new SonicOldMaterialTable();
 				old_material_table->read(file, file_mode, big_endian);
@@ -77,14 +64,14 @@ namespace LibGens {
 			}
 
 			for (size_t i=0; i<vertex_parts_count; i++) {
-				file->goToAddress(vertex_parts_address + i*8);
+				file->SetAddress(vertex_parts_address + i*8);
 				SonicVertexResourceTable *vertex_resource_table = new SonicVertexResourceTable();
 				vertex_resource_table->read(file, file_mode, big_endian);
 				vertex_resource_tables.push_back(vertex_resource_table);
 			}
 
 			for (size_t i=0; i<index_parts_count; i++) {
-				file->goToAddress(index_parts_address + i*8);
+				file->SetAddress(index_parts_address + i*8);
 				SonicPolygonTable *polygon_table = new SonicPolygonTable();
 				polygon_table->read(file, big_endian);
 				polygon_tables.push_back(polygon_table);
@@ -92,7 +79,7 @@ namespace LibGens {
 		}
 		else {
 			for (size_t i=0; i<material_parts_count; i++) {
-				file->goToAddress(material_parts_address + i*8);
+				file->SetAddress(material_parts_address + i*8);
 
 				printf("Material Table %d:\n", i);
 				SonicMaterialTable *material_table = new SonicMaterialTable();
@@ -102,7 +89,7 @@ namespace LibGens {
 			}
 
 			for (size_t i=0; i<vertex_parts_count; i++) {
-				file->goToAddress(vertex_parts_address + i*8);
+				file->SetAddress(vertex_parts_address + i*8);
 
 				SonicVertexTable *vertex_table = new SonicVertexTable();
 				vertex_table->read(file, file_mode, big_endian);
@@ -114,7 +101,7 @@ namespace LibGens {
 			}
 
 			for (size_t i=0; i<index_parts_count; i++) {
-				file->goToAddress(index_parts_address + i*8);
+				file->SetAddress(index_parts_address + i*8);
 
 				SonicIndexTable *index_table = new SonicIndexTable();
 				index_table->read(file, big_endian);
@@ -123,7 +110,7 @@ namespace LibGens {
 		}
 
 		for (size_t i=0; i<mesh_count; i++) {
-			file->goToAddress(mesh_address + i*20);
+			file->SetAddress(mesh_address + i*20);
 
 			SonicMesh *mesh = new SonicMesh();
 			mesh->read(file, big_endian, file_mode);
@@ -135,10 +122,10 @@ namespace LibGens {
 		
 		for (size_t i=0; i<bone_parts_count; i++) {
 			if (file_mode == MODE_GNO) {
-				file->goToAddress(bone_set_address + i*128);
+				file->SetAddress(bone_set_address + i*128);
 			}
 			else {
-				file->goToAddress(bone_set_address + i*144);
+				file->SetAddress(bone_set_address + i*144);
 			}
 			
 
@@ -150,7 +137,7 @@ namespace LibGens {
 			bones.push_back(bone);
 
 			if (bones_names) {
-				Error::addMessage(Error::WARNING, bones_names->getName(i) + ": " + ToString(bone->matrix_index));
+				Error::AddMessage(Error::LogType::WARNING, bones_names->getName(i) + ": " + ToString(bone->matrix_index));
 			}
 			else {
 				printf("   Matrix Index: %d\n", bone->matrix_index);
@@ -182,7 +169,7 @@ namespace LibGens {
 	}
 
 	void SonicXNObject::writeBody(File *file) {
-		file->writeNull(24);
+		file->WriteByte(0, 24);
 		
 		unsigned int material_parts_count=material_tables.size();
 		size_t material_parts_address=0;
@@ -196,7 +183,7 @@ namespace LibGens {
 		size_t mesh_address=0;
 
 		// Bones
-		bone_set_address = file->getCurrentAddress();
+		bone_set_address = file->GetCurrentAddress();
 		for (size_t i=0; i<bone_parts_count; i++) {
 			bones[i]->write(file);
 		}
@@ -263,7 +250,7 @@ namespace LibGens {
 			}
 		}
 
-		material_parts_address = file->getCurrentAddress();
+		material_parts_address = file->GetCurrentAddress();
 		for (size_t i=0; i<material_parts_count; i++) {
 			material_tables[i]->write(file, file_mode);
 		}
@@ -274,7 +261,7 @@ namespace LibGens {
 			vertex_tables[i]->writeTable(file);
 		}
 
-		vertex_parts_address = file->getCurrentAddress();
+		vertex_parts_address = file->GetCurrentAddress();
 		for (size_t i=0; i<vertex_tables.size(); i++) {
 			vertex_tables[i]->write(file);
 		}
@@ -289,7 +276,7 @@ namespace LibGens {
 			index_tables[i]->writeTable(file);
 		}
 
-		index_parts_address = file->getCurrentAddress();
+		index_parts_address = file->GetCurrentAddress();
 		for (size_t i=0; i<index_tables.size(); i++) {
 			index_tables[i]->write(file);
 		}
@@ -300,7 +287,7 @@ namespace LibGens {
 			meshes[i]->writeExtras(file);
 		}
 
-		mesh_address = file->getCurrentAddress();
+		mesh_address = file->GetCurrentAddress();
 		for (size_t i=0; i<meshes.size(); i++) {
 			meshes[i]->write(file);
 		}
@@ -316,49 +303,51 @@ namespace LibGens {
 		if (texture) total_texture_count = texture->getTextureUnitsSize();
 
 		// Object Header
-		size_t object_header_address=file->getCurrentAddress();
-		center.write(file, false);
-		file->writeFloat32(&radius);
-		file->writeInt32(&material_parts_count);
-		file->writeInt32A(&material_parts_address);
-		file->writeInt32(&vertex_parts_count);
-		file->writeInt32A(&vertex_parts_address);
-		file->writeInt32(&index_parts_count);
-		file->writeInt32A(&index_parts_address);
-		file->writeInt32(&bone_parts_count);
-		file->writeInt32(&bone_max_depth);
-		file->writeInt32A(&bone_set_address);
-		file->writeInt32(&bone_matrix_count);
-		file->writeInt32(&mesh_count);
-		file->writeInt32A(&mesh_address);
-		file->writeInt32(&total_texture_count);
+		size_t object_header_address=file->GetCurrentAddress();
+		file->Write<glm::vec3>(center, Endianess::Little);
+		file->Write<f32>(radius);
+		file->Write<u32>(material_parts_count);
+		file->WriteAddress(material_parts_address, Endianess::Little);
+		file->Write<u32>(vertex_parts_count);
+		file->WriteAddress(vertex_parts_address, Endianess::Little);
+		file->Write<u32>(index_parts_count);
+		file->WriteAddress(index_parts_address, Endianess::Little);
+		file->Write<u32>(bone_parts_count);
+		file->Write<u32>(bone_max_depth);
+		file->WriteAddress(bone_set_address, Endianess::Little);
+		file->Write<u32>(bone_matrix_count);
+		file->Write<u32>(mesh_count);
+		file->WriteAddress(mesh_address, Endianess::Little);
+		file->Write<u32>(total_texture_count);
+
+		
 
 		if (file_mode == MODE_ZNO) {
-			file->writeInt32(&type);
-			file->writeInt32(&version);
-			bounding_box.write(file, false);
+			file->Write<u32>(type);
+			file->Write<u32>(version);
+			file->Write<glm::vec3>(bounding_box);
 		}
 
 		// Vertex Buffer
-		size_t vertex_buffer_address=file->getCurrentAddress();
+		size_t vertex_buffer_address=file->GetCurrentAddress();
 		for (size_t i=0; i<vertex_tables.size(); i++) {
 			vertex_tables[i]->writeVertices(file, file_mode);
 		}
 
-		unsigned int vertex_buffer_size = file->getCurrentAddress() - vertex_buffer_address;
-		size_t bookmark=file->getCurrentAddress();
+		unsigned int vertex_buffer_size = file->GetCurrentAddress() - vertex_buffer_address;
+		size_t bookmark=file->GetCurrentAddress();
 
-		file->goToAddress(head_address + 8);
-		file->writeInt32A(&object_header_address, false);
-		file->writeInt32(&header_flag);
-		file->writeInt32(&vertex_buffer_size);
-		file->writeInt32A(&vertex_buffer_address);
+		file->SetAddress(head_address + 8);
+		file->WriteAddress(object_header_address, Endianess::Little);
+		file->Write<u32>(header_flag);
+		file->Write<u32>(vertex_buffer_size);
+		file->WriteAddress(vertex_buffer_address, Endianess::Little);
 
 		for (size_t i=0; i<vertex_tables.size(); i++) {
 			vertex_tables[i]->writeTableFixed(file);
 		}
 
-		file->goToAddress(bookmark);
+		file->SetAddress(bookmark);
 	}
 
 	bool SonicXNObject::getBoneIndexByName(string name_search, unsigned int &index) {
@@ -389,22 +378,24 @@ namespace LibGens {
 		setBoneScale(bone->sibling_index, scale);
 	}
 
-	void SonicXNObject::calculateSkinningMatrix(unsigned short current_index, LibGens::Matrix4 parent_matrix) {
+	void SonicXNObject::calculateSkinningMatrix(unsigned short current_index, glm::mat4 parent_matrix) {
 		if (current_index == 0xFFFF) return;
 
 		SonicBone *bone=bones[current_index];
-		LibGens::Matrix4 result_matrix = parent_matrix * bone->current_matrix;
+		glm::mat4 result_matrix = parent_matrix * glm::mat4(bone->orientation);// * bone->current_matrix;
 
 		bone->matrix = result_matrix;
-		bone->matrix = bone->matrix.transpose();
-		bone->matrix = bone->matrix.inverse();
+		bone->matrix = glm::transpose(bone->matrix);
+		bone->matrix = glm::inverse(bone->matrix);
+
+		
 
 		calculateSkinningMatrix(bone->child_index, result_matrix);
 		calculateSkinningMatrix(bone->sibling_index, parent_matrix);
 	}
 
 	void SonicXNObject::calculateSkinningMatrices() {
-		Matrix4 identity=Matrix4();
+		glm::mat4 identity=glm::mat4();
 		calculateSkinningMatrix(0, identity);
 	}
 

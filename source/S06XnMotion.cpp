@@ -17,37 +17,36 @@
 //    Read AUTHORS.txt, LICENSE.txt and COPYRIGHT.txt for more details.
 //=========================================================================
 
-#include "LibGens.h"
 #include "S06XnFile.h"
 
-namespace LibGens {
+namespace LibS06 {
 	void SonicFrameValue::read(File *file, bool big_endian) {
-		file->readFloat32E(&frame, big_endian);
-		file->readFloat32E(&value, big_endian);
+		frame = file->Read<f32>();
+		value = file->Read<f32>();
 	}
 
 	void SonicFrameValue::write(File *file) {
-		file->writeFloat32(&frame);
-		file->writeFloat32(&value);
+		file->Write(frame);
+		file->Write(value);
 	}
 
 	void SonicFrameValueFloats::read(File *file, bool big_endian) {
-		file->readFloat32E(&frame, big_endian);
-		value.read(file, big_endian);
+		frame = file->Read<f32>();
+		value = file->Read<glm::vec3>();
 	}
 
 	void SonicFrameValueFloats::write(File *file) {
-		file->writeFloat32(&frame);
-		value.write(file);
+		file->Write<f32>(frame);
+		file->Write<glm::vec3>(value);
 	}
 
 	void SonicFrameValueFloatsGroup::read(File *file, bool big_endian) {
-		file->readFloat32E(&frame, big_endian);
-		file->readInt32E(&flag, big_endian);
-		file->readFloat32E(&unknown_1, big_endian);
-		file->readFloat32E(&unknown_2, big_endian);
-		file->readFloat32E(&unknown_3, big_endian);
-		file->readFloat32E(&unknown_4, big_endian);
+		frame = file->Read<f32>();
+		flag = file->Read<u32>();
+		unknown_1 = file->Read<f32>();
+		unknown_2 = file->Read<f32>();
+		unknown_3 = file->Read<f32>();
+		unknown_4 = file->Read<f32>();
 	}
 
 	void SonicFrameValueFloatsGroup::write(File *file) {
@@ -55,82 +54,80 @@ namespace LibGens {
 	}
 
 	void SonicFrameValueAngles::read(File *file, bool big_endian) {
-		file->readInt16E(&frame, big_endian);
-		file->readInt16E(&value_x, big_endian);
-		file->readInt16E(&value_y, big_endian);
-		file->readInt16E(&value_z, big_endian);
+		frame = file->Read<u16>();
+		value_x = file->Read<u16>();
+		value_y = file->Read<u16>();
+		value_z = file->Read<u16>();
 	}
 
 	void SonicFrameValueAngles::write(File *file) {
-		file->writeInt16(&frame);
-		file->writeInt16(&value_x);
-		file->writeInt16(&value_y);
-		file->writeInt16(&value_z);
+		file->Write<u16>(frame);
+		file->Write<u16>(value_x);
+		file->Write<u16>(value_y);
+		file->Write<u16>(value_z);
 	}
 
 	void SonicFrameValueIntBeta::read(File *file, bool big_endian) {
-		file->readFloat32E(&frame, big_endian);
-		file->readInt16E(&value, big_endian);
+		frame = file->Read<f32();
+		value = file->Read<u16>();
 	}
 
 	void SonicFrameValueIntBeta::write(File *file) {
-		file->writeFloat32(&frame);
-		file->writeInt16(&value);
+		file->Write<f32>(frame);
+		file->Write<u16>(value);
 	}
 
 	void SonicFrameValueInt::read(File *file, bool big_endian) {
-		file->readInt16E(&frame, big_endian);
-		file->readInt16E(&value, big_endian);
+		frame = file->Read<u16>();
+		value = file->Read<u16>();
 	}
 
 	void SonicFrameValueInt::write(File *file) {
-		file->writeInt16(&frame);
-		file->writeInt16(&value);
+		file->Write<u16>(frame);
+		file->Write<u16>(value);
 	}
 
 	void SonicMotionControl::read(File *file, bool big_endian) {
-		size_t address=0;
-		file->readInt32E(&type, big_endian);
-		file->readInt32E(&flag, big_endian);
-		file->readInt32E(&bone_index, big_endian);
-		file->readFloat32E(&start_frame, big_endian);
-		file->readFloat32E(&end_frame, big_endian);
-		file->readFloat32E(&start_key_frame, big_endian);
-		file->readFloat32E(&end_key_frame, big_endian);
+		type = file->Read<u32>();
+		flag = file->Read<u32>();
+		bone_index = file->Read<u32>();
+		start_frame = file->Read<f32>();
+		end_frame= file->Read<f32>();
+		start_key_frame = file->Read<f32>();
+		end_key_frame = file->Read<f32>();
 
-		unsigned int element_count=0;
-		file->readInt32E(&element_count, big_endian);
-		file->readInt32E(&element_size, big_endian);
-		file->readInt32EA(&address, big_endian);
+		unsigned int element_count = file->Read<u32>();
+		element_size = file->Read<u32>();
+		size_t address = file->ReadAddressFileEndianess();
 
-		string type_str="UNKNOWN";
-		if (type ==      LIBGENS_XNMOTION_TYPE_X_COORDINATE_LINEAR)      type_str  = "X Coordinate";
-		else if (type == LIBGENS_XNMOTION_TYPE_Y_COORDINATE_LINEAR)      type_str  = "Y Coordinate";
-		else if (type == LIBGENS_XNMOTION_TYPE_Z_COORDINATE_LINEAR)      type_str  = "Z Coordinate";
-		else if (type == LIBGENS_XNMOTION_TYPE_X_SCALE_LINEAR)           type_str  = "X Scale";
-		else if (type == LIBGENS_XNMOTION_TYPE_Y_SCALE_LINEAR)           type_str  = "Y Scale";
-		else if (type == LIBGENS_XNMOTION_TYPE_Z_SCALE_LINEAR)           type_str  = "Z Scale";
-		else if (type == LIBGENS_XNMOTION_TYPE_X_ANGLE_LINEAR)           type_str  = "X Angle";
-		else if (type == LIBGENS_XNMOTION_TYPE_Y_ANGLE_LINEAR)           type_str  = "Y Angle";
-		else if (type == LIBGENS_XNMOTION_TYPE_Z_ANGLE_LINEAR)           type_str  = "Z Angle";
-		else if (type == LIBGENS_XNMOTION_TYPE_X_ANGLE_BETA)             type_str  = "X Angle Beta";
-		else if (type == LIBGENS_XNMOTION_TYPE_Y_ANGLE_BETA)             type_str  = "Y Angle Beta";
-		else if (type == LIBGENS_XNMOTION_TYPE_Z_ANGLE_BETA)             type_str  = "Z Angle Beta";
-		else if (type == LIBGENS_XNMOTION_TYPE_COORDINATES_LINEAR)       type_str  = "Translation";
-		else if (type == LIBGENS_XNMOTION_TYPE_ANGLES_LINEAR)            type_str  = "Rotation";
+		std::string type_str="UNKNOWN";
+		if (type ==      LIBS06_XNMOTION_TYPE_X_COORDINATE_LINEAR)      type_str  = "X Coordinate";
+		else if (type == LIBS06_XNMOTION_TYPE_Y_COORDINATE_LINEAR)      type_str  = "Y Coordinate";
+		else if (type == LIBS06_XNMOTION_TYPE_Z_COORDINATE_LINEAR)      type_str  = "Z Coordinate";
+		else if (type == LIBS06_XNMOTION_TYPE_X_SCALE_LINEAR)           type_str  = "X Scale";
+		else if (type == LIBS06_XNMOTION_TYPE_Y_SCALE_LINEAR)           type_str  = "Y Scale";
+		else if (type == LIBS06_XNMOTION_TYPE_Z_SCALE_LINEAR)           type_str  = "Z Scale";
+		else if (type == LIBS06_XNMOTION_TYPE_X_ANGLE_LINEAR)           type_str  = "X Angle";
+		else if (type == LIBS06_XNMOTION_TYPE_Y_ANGLE_LINEAR)           type_str  = "Y Angle";
+		else if (type == LIBS06_XNMOTION_TYPE_Z_ANGLE_LINEAR)           type_str  = "Z Angle";
+		else if (type == LIBS06_XNMOTION_TYPE_X_ANGLE_BETA)             type_str  = "X Angle Beta";
+		else if (type == LIBS06_XNMOTION_TYPE_Y_ANGLE_BETA)             type_str  = "Y Angle Beta";
+		else if (type == LIBS06_XNMOTION_TYPE_Z_ANGLE_BETA)             type_str  = "Z Angle Beta";
+		else if (type == LIBS06_XNMOTION_TYPE_COORDINATES_LINEAR)       type_str  = "Translation";
+		else if (type == LIBS06_XNMOTION_TYPE_ANGLES_LINEAR)            type_str  = "Rotation";
 		else {
 			printf("Unknown type %x with element size %d.\n", type, element_size);
 			getchar();
 		}
 
-		Error::printfMessage(Error::WARNING, "MotionControl Type %s(%x) for Bone %d:", type_str.c_str(), type, bone_index);
-		Error::printfMessage(Error::WARNING, "  Flag: %d", flag);
-		Error::printfMessage(Error::WARNING, "  Start: %d End: %f Start Key: %f End Key: %f", start_frame, end_frame, start_frame, end_frame);
-		Error::printfMessage(Error::WARNING, "  Elements: %d(%d) Elements Address: %d", element_count, element_size, address);
+		Error::printfMessage(Error::LogType::WARNING, "MotionControl Type %s(%x) for Bone %d:", type_str.c_str(), type, bone_index);
+		Error::printfMessage(Error::LogType::WARNING, "  Flag: %d", flag);
+		Error::printfMessage(Error::LogType::WARNING, "  Start: %d End: %f Start Key: %f End Key: %f", start_frame, end_frame, start_frame, end_frame);
+		Error::printfMessage(Error::LogType::WARNING, "  Elements: %d(%d) Elements Address: %d", element_count, element_size, address);
 
 		if (element_size == 24) {
 			for (size_t i=0; i<element_count; i++) {
-				file->goToAddress(address + i*element_size);
+				file->SetAddress(address + i*element_size);
 				SonicFrameValueFloatsGroup *frame_value=new SonicFrameValueFloatsGroup();
 				frame_value->read(file, big_endian);
 				frame_values_floats_groups.push_back(frame_value);
@@ -138,7 +135,7 @@ namespace LibGens {
 		}
 		else if (element_size == 16) {
 			for (size_t i=0; i<element_count; i++) {
-				file->goToAddress(address + i*element_size);
+				file->SetAddress(address + i*element_size);
 				SonicFrameValueFloats *frame_value=new SonicFrameValueFloats();
 				frame_value->read(file, big_endian);
 				frame_values_floats.push_back(frame_value);
@@ -146,15 +143,15 @@ namespace LibGens {
 		}
 		else if (element_size == 8) {
 			for (size_t i=0; i<element_count; i++) {
-				file->goToAddress(address + i*element_size);
-				if (type == LIBGENS_XNMOTION_TYPE_ANGLES_LINEAR) {
+				file->SetAddress(address + i*element_size);
+				if (type == LIBS06_XNMOTION_TYPE_ANGLES_LINEAR) {
 					SonicFrameValueAngles *frame_value=new SonicFrameValueAngles();
 					frame_value->read(file, big_endian);
 					frame_values_angles.push_back(frame_value);
 				}
-				else if ((type == LIBGENS_XNMOTION_TYPE_X_ANGLE_BETA) || 
-					(type == LIBGENS_XNMOTION_TYPE_Y_ANGLE_BETA) || 
-					(type == LIBGENS_XNMOTION_TYPE_Z_ANGLE_BETA)) {
+				else if ((type == LIBS06_XNMOTION_TYPE_X_ANGLE_BETA) || 
+					(type == LIBS06_XNMOTION_TYPE_Y_ANGLE_BETA) || 
+					(type == LIBS06_XNMOTION_TYPE_Z_ANGLE_BETA)) {
 
 					SonicFrameValueIntBeta *frame_value_int_beta=new SonicFrameValueIntBeta();
 					frame_value_int_beta->read(file, big_endian);
@@ -169,7 +166,7 @@ namespace LibGens {
 		}
 		else if (element_size == 4) {
 			for (size_t i=0; i<element_count; i++) {
-				file->goToAddress(address + i*element_size);
+				file->SetAddress(address + i*element_size);
 				SonicFrameValueInt *frame_value_int=new SonicFrameValueInt();
 				frame_value_int->read(file, big_endian);
 				frame_values_int.push_back(frame_value_int);
@@ -179,7 +176,7 @@ namespace LibGens {
 
 	
 	void SonicMotionControl::writeFrameValues(File *file) {
-		frame_value_address=file->getCurrentAddress();
+		frame_value_address=file->GetCurrentAddress();
 
 		if (element_size == 16) {
 			for (size_t i=0; i<frame_values_floats.size(); i++) {
@@ -187,14 +184,14 @@ namespace LibGens {
 			}
 		}
 		else if (element_size == 8) {
-			if (type == LIBGENS_XNMOTION_TYPE_ANGLES_LINEAR) {
+			if (type == LIBS06_XNMOTION_TYPE_ANGLES_LINEAR) {
 				for (size_t i=0; i<frame_values_angles.size(); i++) {
 					frame_values_angles[i]->write(file);
 				}
 			}
-			else if ((type == LIBGENS_XNMOTION_TYPE_X_ANGLE_BETA) || 
-				(type == LIBGENS_XNMOTION_TYPE_Y_ANGLE_BETA) || 
-				(type == LIBGENS_XNMOTION_TYPE_Z_ANGLE_BETA)) {
+			else if ((type == LIBS06_XNMOTION_TYPE_X_ANGLE_BETA) || 
+				(type == LIBS06_XNMOTION_TYPE_Y_ANGLE_BETA) || 
+				(type == LIBS06_XNMOTION_TYPE_Z_ANGLE_BETA)) {
 
 				for (size_t i=0; i<frame_values_int_beta.size(); i++) {
 					frame_values_int_beta[i]->write(file);
@@ -216,47 +213,44 @@ namespace LibGens {
 	}
 
 	void SonicMotionControl::write(File *file) {
-		file->writeInt32(&type);
-		file->writeInt32(&flag);
-		file->writeInt32(&bone_index);
-		file->writeFloat32(&start_frame);
-		file->writeFloat32(&end_frame);
-		file->writeFloat32(&start_key_frame);
-		file->writeFloat32(&end_key_frame);
+		file->Write<u32>(type);
+		file->Write<u32>(flag);
+		file->Write<u32>(bone_index);
+		file->Write<f32>(start_frame);
+		file->Write<f32>(end_frame);
+		file->Write<f32>(start_key_frame);
+		file->Write<f32>(end_key_frame);
 		
 		unsigned int element_count=0;
 		if (element_size == 16)     element_count=frame_values_floats.size();
 		else if (element_size == 8) {
-			if (type == LIBGENS_XNMOTION_TYPE_ANGLES_LINEAR) element_count=frame_values_angles.size();
-			else if ((type == LIBGENS_XNMOTION_TYPE_X_ANGLE_BETA) || (type == LIBGENS_XNMOTION_TYPE_Y_ANGLE_BETA) || (type == LIBGENS_XNMOTION_TYPE_Z_ANGLE_BETA)) element_count=frame_values_int_beta.size();
+			if (type == LIBS06_XNMOTION_TYPE_ANGLES_LINEAR) element_count=frame_values_angles.size();
+			else if ((type == LIBS06_XNMOTION_TYPE_X_ANGLE_BETA) || (type == LIBS06_XNMOTION_TYPE_Y_ANGLE_BETA) || (type == LIBS06_XNMOTION_TYPE_Z_ANGLE_BETA)) element_count=frame_values_int_beta.size();
 			else element_count=frame_values.size();
 		}
 		else if (element_size == 4) element_count=frame_values_int.size();
-		file->writeInt32(&element_count);
-		file->writeInt32(&element_size);
-		file->writeInt32A(&frame_value_address);
+		file->Write<u32>(element_count);
+		file->Write<u32>(element_size);
+		file->WriteAddressFileEndianess(frame_value_address);
 	}
 
 
 	void SonicXNMotion::read(File *file) {
 		SonicXNSection::read(file);
-		size_t table_address=0;
-		file->readInt32EA(&table_address, big_endian);
-		file->goToAddress(table_address);
+		size_t table_address = file->ReadAddressFileEndianess();
+		file->SetAddress(table_address);
 
-		unsigned int motion_control_count=0;
-		size_t motion_control_address=0;
-		file->readInt32E(&flag, big_endian);
-		file->readFloat32E(&start_frame, big_endian);
-		file->readFloat32E(&end_frame, big_endian);
-		file->readInt32E(&motion_control_count, big_endian);
-		file->readInt32EA(&motion_control_address, big_endian);
-		file->readFloat32E(&fps, big_endian);
+		flag = file->Read<u32>();
+		start_frame = file->Read<f32>();
+		end_frame = file->Read<f32>();
+		unsigned int motion_control_count = file->Read<u32>();
+		size_t motion_control_address = file->ReadAddressFileEndianess();
+		fps = file->Read<f32>();
 
 		printf("Animation (%d) found with %f frames at %f FPS. Total MotionControls %d\n", flag, end_frame, fps, motion_control_count);
 
 		for (size_t i=0; i<motion_control_count; i++) {
-			file->goToAddress(motion_control_address + 40*i);
+			file->SetAddress(motion_control_address + 40*i);
 
 			SonicMotionControl *motion_control = new SonicMotionControl();
 			motion_control->read(file, big_endian);
@@ -265,33 +259,33 @@ namespace LibGens {
 	}
 
 	void SonicXNMotion::writeBody(File *file) {
-		size_t header_address=file->getCurrentAddress();
-		file->fixPadding(16);
+		size_t header_address=file->GetCurrentAddress();
+		file->FixPadding(16);
 
 		for (size_t i=0; i<motion_controls.size(); i++) {
 			motion_controls[i]->writeFrameValues(file);
 		}
 
-		size_t motion_control_address=file->getCurrentAddress();
+		size_t motion_control_address=file->GetCurrentAddress();
 		for (size_t i=0; i<motion_controls.size(); i++) {
 			motion_controls[i]->write(file);
 		}
 
 		unsigned int motion_control_count=motion_controls.size();
-		size_t motion_header_address=file->getCurrentAddress();
-		file->writeInt32(&flag);
-		file->writeFloat32(&start_frame);
-		file->writeFloat32(&end_frame);
-		file->writeInt32(&motion_control_count);
-		file->writeInt32A(&motion_control_address);
-		file->writeFloat32(&fps);
+		size_t motion_header_address=file->GetCurrentAddress();
+		file->Write<u32>(flag);
+		file->Write<f32>(start_frame);
+		file->Write<f32>(end_frame);
+		file->Write<u32>(motion_control_count);
+		file->WriteAddressFileEndianess(motion_control_address);
+		file->Write(fps);
 
-		file->goToAddress(header_address);
-		file->writeInt32A(&motion_header_address, false);
-		file->goToEnd();
+		file->SetAddress(header_address);
+		file->WriteAddressFileEndianess(motion_header_address); // TODO File tables stuff this one is false: , false
+		file->GoToEnd();
 	}
 
-	Vector3 SonicMotionControl::getFrameVector(float frame, Vector3 reference) {
+	glm::vec3 SonicMotionControl::getFrameVector(float frame, glm::vec3 reference) {
 		if (element_size == 16) {
 			SonicFrameValueFloats *frame_value_prev=NULL;
 			SonicFrameValueFloats *frame_value_next=NULL;
@@ -308,7 +302,7 @@ namespace LibGens {
 
 			if (frame_value_prev && frame_value_next) {
 				float time_diff  = frame_value_next->frame - frame_value_prev->frame;
-				Vector3 value_diff = frame_value_next->value - frame_value_prev->value;
+				glm::vec3 value_diff = frame_value_next->value - frame_value_prev->value;
 				float scale      = (frame - frame_value_prev->frame) / time_diff;
 
 				return frame_value_prev->value + value_diff*scale;
@@ -388,13 +382,13 @@ namespace LibGens {
 				if (value_z > range) value_z -= range;
 				if (value_z < 0.0f)  value_z += range;
 
-				return Vector3(value_x, value_y, value_z);
+				return glm::vec3(value_x, value_y, value_z);
 			}
 			else if (frame_value_prev) {
-				return Vector3(frame_value_prev->value_x, frame_value_prev->value_y, frame_value_prev->value_z);
+				return glm::vec3(frame_value_prev->value_x, frame_value_prev->value_y, frame_value_prev->value_z);
 			}
 			else if (frame_value_next) {
-				return Vector3(frame_value_next->value_x, frame_value_next->value_y, frame_value_next->value_z);
+				return glm::vec3(frame_value_next->value_x, frame_value_next->value_y, frame_value_next->value_z);
 			}
 			else {
 				return reference;
@@ -408,9 +402,9 @@ namespace LibGens {
 
 	float SonicMotionControl::getFrameValue(float frame, float reference) {
 		if (element_size == 8) {
-			if ((type == LIBGENS_XNMOTION_TYPE_X_ANGLE_BETA) || 
-				(type == LIBGENS_XNMOTION_TYPE_Y_ANGLE_BETA) || 
-				(type == LIBGENS_XNMOTION_TYPE_Z_ANGLE_BETA)) {
+			if ((type == LIBS06_XNMOTION_TYPE_X_ANGLE_BETA) || 
+				(type == LIBS06_XNMOTION_TYPE_Y_ANGLE_BETA) || 
+				(type == LIBS06_XNMOTION_TYPE_Z_ANGLE_BETA)) {
 
 				SonicFrameValueIntBeta *frame_value_prev=NULL;
 				SonicFrameValueIntBeta *frame_value_next=NULL;
@@ -546,10 +540,10 @@ namespace LibGens {
 		float start=999999.0f;
 		float end=0.0f;
 
-		vector<SonicFrameValue *>::iterator it=frame_values.begin();
+		std::vector<SonicFrameValue *>::iterator it=frame_values.begin();
 		while (it!=frame_values.end()) {
-			vector<SonicFrameValue *>::iterator next_element = it+1;
-			vector<SonicFrameValue *>::iterator next_element_2 = it+2;
+			std::vector<SonicFrameValue *>::iterator next_element = it+1;
+			std::vector<SonicFrameValue *>::iterator next_element_2 = it+2;
 
 			if (start > (*it)->frame) start = (*it)->frame;
 			if (end < (*it)->frame) end = (*it)->frame;
@@ -590,10 +584,10 @@ namespace LibGens {
 		float start=999999.0f;
 		float end=0.0f;
 		
-		vector<SonicFrameValueInt *>::iterator it=frame_values_int.begin();
+		std::vector<SonicFrameValueInt *>::iterator it=frame_values_int.begin();
 		while (it!=frame_values_int.end()) {
-			vector<SonicFrameValueInt *>::iterator next_element = it+1;
-			vector<SonicFrameValueInt *>::iterator next_element_2 = it+2;
+			std::vector<SonicFrameValueInt *>::iterator next_element = it+1;
+			std::vector<SonicFrameValueInt *>::iterator next_element_2 = it+2;
 			
 			if (start > (*it)->frame) start = (*it)->frame;
 			if (end < (*it)->frame) end = (*it)->frame;
@@ -635,7 +629,7 @@ namespace LibGens {
 		float start=999999.0f;
 		float end=0.0f;
 
-		vector<SonicFrameValueAngles *>::iterator it=frame_values_angles.begin();
+		std::vector<SonicFrameValueAngles *>::iterator it=frame_values_angles.begin();
 		while (it!=frame_values_angles.end()) {
 			if (start > (*it)->frame) start = (*it)->frame;
 			if (end < (*it)->frame) end = (*it)->frame;
@@ -655,10 +649,10 @@ namespace LibGens {
 	}
 
 	void SonicMotionControl::setScale(float scale) {
-		if ((type == LIBGENS_XNMOTION_TYPE_X_COORDINATE_LINEAR) || 
-			(type == LIBGENS_XNMOTION_TYPE_Y_COORDINATE_LINEAR) || 
-			(type == LIBGENS_XNMOTION_TYPE_Z_COORDINATE_LINEAR) ||
-			(type == LIBGENS_XNMOTION_TYPE_COORDINATES_LINEAR)) {
+		if ((type == LIBS06_XNMOTION_TYPE_X_COORDINATE_LINEAR) || 
+			(type == LIBS06_XNMOTION_TYPE_Y_COORDINATE_LINEAR) || 
+			(type == LIBS06_XNMOTION_TYPE_Z_COORDINATE_LINEAR) ||
+			(type == LIBS06_XNMOTION_TYPE_COORDINATES_LINEAR)) {
 
 			for (size_t i=0; i<frame_values.size(); i++) {
 				frame_values[i]->value *= scale;
@@ -680,64 +674,64 @@ namespace LibGens {
 	}
 
 	SonicMotionControl *SonicXNMotion::getPositionMotionControl(unsigned int bone_index) {
-		return getMotionControl(LIBGENS_XNMOTION_TYPE_COORDINATES_LINEAR, bone_index);
+		return getMotionControl(LIBS06_XNMOTION_TYPE_COORDINATES_LINEAR, bone_index);
 	}
 
 	SonicMotionControl *SonicXNMotion::getAnglesMotionControl(unsigned int bone_index) {
-		return getMotionControl(LIBGENS_XNMOTION_TYPE_ANGLES_LINEAR, bone_index);
+		return getMotionControl(LIBS06_XNMOTION_TYPE_ANGLES_LINEAR, bone_index);
 	}
 
 	SonicMotionControl *SonicXNMotion::getPositionXMotionControl(unsigned int bone_index) {
-		return getMotionControl(LIBGENS_XNMOTION_TYPE_X_COORDINATE_LINEAR, bone_index);
+		return getMotionControl(LIBS06_XNMOTION_TYPE_X_COORDINATE_LINEAR, bone_index);
 	}
 
 	SonicMotionControl *SonicXNMotion::getPositionYMotionControl(unsigned int bone_index) {
-		return getMotionControl(LIBGENS_XNMOTION_TYPE_Y_COORDINATE_LINEAR, bone_index);
+		return getMotionControl(LIBS06_XNMOTION_TYPE_Y_COORDINATE_LINEAR, bone_index);
 	}
 
 	SonicMotionControl *SonicXNMotion::getPositionZMotionControl(unsigned int bone_index) {
-		return getMotionControl(LIBGENS_XNMOTION_TYPE_Z_COORDINATE_LINEAR, bone_index);
+		return getMotionControl(LIBS06_XNMOTION_TYPE_Z_COORDINATE_LINEAR, bone_index);
 	}
 
 	SonicMotionControl *SonicXNMotion::getAngleXMotionControl(unsigned int bone_index) {
-		return getMotionControl(LIBGENS_XNMOTION_TYPE_X_ANGLE_LINEAR, bone_index);
+		return getMotionControl(LIBS06_XNMOTION_TYPE_X_ANGLE_LINEAR, bone_index);
 	}
 
 	SonicMotionControl *SonicXNMotion::getAngleYMotionControl(unsigned int bone_index) {
-		return getMotionControl(LIBGENS_XNMOTION_TYPE_Y_ANGLE_LINEAR, bone_index);
+		return getMotionControl(LIBS06_XNMOTION_TYPE_Y_ANGLE_LINEAR, bone_index);
 	}
 
 	SonicMotionControl *SonicXNMotion::getAngleZMotionControl(unsigned int bone_index) {
-		return getMotionControl(LIBGENS_XNMOTION_TYPE_Z_ANGLE_LINEAR, bone_index);
+		return getMotionControl(LIBS06_XNMOTION_TYPE_Z_ANGLE_LINEAR, bone_index);
 	}
 
 	SonicMotionControl *SonicXNMotion::getAngleBetaXMotionControl(unsigned int bone_index) {
-		return getMotionControl(LIBGENS_XNMOTION_TYPE_X_ANGLE_BETA, bone_index);
+		return getMotionControl(LIBS06_XNMOTION_TYPE_X_ANGLE_BETA, bone_index);
 	}
 
 	SonicMotionControl *SonicXNMotion::getAngleBetaYMotionControl(unsigned int bone_index) {
-		return getMotionControl(LIBGENS_XNMOTION_TYPE_Y_ANGLE_BETA, bone_index);
+		return getMotionControl(LIBS06_XNMOTION_TYPE_Y_ANGLE_BETA, bone_index);
 	}
 
 	SonicMotionControl *SonicXNMotion::getAngleBetaZMotionControl(unsigned int bone_index) {
-		return getMotionControl(LIBGENS_XNMOTION_TYPE_Z_ANGLE_BETA, bone_index);
+		return getMotionControl(LIBS06_XNMOTION_TYPE_Z_ANGLE_BETA, bone_index);
 	}
 
 	SonicMotionControl *SonicXNMotion::getScaleXMotionControl(unsigned int bone_index) {
-		return getMotionControl(LIBGENS_XNMOTION_TYPE_X_SCALE_LINEAR, bone_index);
+		return getMotionControl(LIBS06_XNMOTION_TYPE_X_SCALE_LINEAR, bone_index);
 	}
 
 	SonicMotionControl *SonicXNMotion::getScaleYMotionControl(unsigned int bone_index) {
-		return getMotionControl(LIBGENS_XNMOTION_TYPE_Y_SCALE_LINEAR, bone_index);
+		return getMotionControl(LIBS06_XNMOTION_TYPE_Y_SCALE_LINEAR, bone_index);
 	}
 
 	SonicMotionControl *SonicXNMotion::getScaleZMotionControl(unsigned int bone_index) {
-		return getMotionControl(LIBGENS_XNMOTION_TYPE_Z_SCALE_LINEAR, bone_index);
+		return getMotionControl(LIBS06_XNMOTION_TYPE_Z_SCALE_LINEAR, bone_index);
 	}
 
 
 	void SonicXNMotion::pushMotionControl(SonicMotionControl *motion_control) {
-		for (vector<SonicMotionControl *>::iterator it=motion_controls.begin(); it!=motion_controls.end(); it++) {
+		for (std::vector<SonicMotionControl *>::iterator it=motion_controls.begin(); it!=motion_controls.end(); it++) {
 			if ((*it)->bone_index > motion_control->bone_index) {
 				motion_controls.insert(it, motion_control);
 				return;
@@ -748,7 +742,7 @@ namespace LibGens {
 	}
 
 	void SonicXNMotion::deleteMotionControl(SonicMotionControl *motion_control) {
-		for (vector<SonicMotionControl *>::iterator it=motion_controls.begin(); it!=motion_controls.end(); it++) {
+		for (std::vector<SonicMotionControl *>::iterator it=motion_controls.begin(); it!=motion_controls.end(); it++) {
 			if ((*it) == motion_control) {
 				motion_controls.erase(it);
 				delete motion_control;

@@ -17,77 +17,69 @@
 //    Read AUTHORS.txt, LICENSE.txt and COPYRIGHT.txt for more details.
 //=========================================================================
 
-#include "LibGens.h"
 #include "S06XnFile.h"
 
-namespace LibGens {
+namespace LibS06 {
 	void SonicXNTexture::read(File *file) {
 		SonicXNSection::read(file);
 
-		size_t texture_table_info_address=0;
-		file->readInt32EA(&texture_table_info_address, big_endian);
-		file->goToAddress(texture_table_info_address);
+		size_t texture_table_info_address = file->ReadAddressFileEndianess();
+		file->SetAddress(texture_table_info_address);
 
-		unsigned int texture_count=0;
-		size_t texture_table_address=0;
-		file->readInt32E(&texture_count, big_endian);
-		file->readInt32EA(&texture_table_address, big_endian);
+		unsigned int texture_count = file->Read<u32>();
+		size_t texture_table_address = file->ReadAddressFileEndianess();
 
 		for (size_t i=0; i<texture_count; i++) {
 			if (file_mode == MODE_YNO) {
-				file->goToAddress(texture_table_address + i*8);
+				file->SetAddress(texture_table_address + i*8);
 			}
-			else file->goToAddress(texture_table_address + i*20 + 4);
+			else file->SetAddress(texture_table_address + i*20 + 4);
 
-			size_t name_address=0;
-			unsigned int name_size=0;
-			file->readInt32EA(&name_address, big_endian);
-			file->readInt32E(&name_size, big_endian);
+			size_t name_address = file->ReadAddressFileEndianess();
+			unsigned int name_size = file->Read<u32>();
 
-			file->goToAddress(name_address);
-			string texture_unit="";
-			file->readString(&texture_unit);
+			file->SetAddress(name_address);
+			string texture_unit = file->ReadNullTerminatedString();
 
 			textures.push_back(texture_unit);
 			sizes.push_back(name_size);
 
-			Error::printfMessage(Error::WARNING, "Found texture unit %d: %s (Flags: %d)", i, texture_unit.c_str(), name_size);
+			Error::printfMessage(Error::LogType::WARNING, "Found texture unit %d: %s (Flags: %d)", i, texture_unit.c_str(), name_size);
 		}
 	}
 
 	void SonicXNTexture::writeBody(File *file) {
-		file->fixPadding(16);
+		file->FixPadding(16);
 
-		size_t texture_address=file->getCurrentAddress();
-		file->writeNull(textures.size() * 20);
+		size_t texture_address=file->GetCurrentAddress();
+		file->WriteByte(0, textures.size() * 20);
 
-		size_t table_address=file->getCurrentAddress();
+		size_t table_address=file->GetCurrentAddress();
 		unsigned int texture_count = textures.size();
-		file->writeInt32(&texture_count);
-		file->writeInt32A(&texture_address);
+		file->Write<u32>(texture_count);
+		file->WriteAddressFileEndianess(texture_address);
 
 		texture_addresses.clear();
 		for (size_t i=0; i<texture_count; i++) {
-			texture_addresses.push_back(file->getCurrentAddress());
-			file->writeString(&textures[i]);
+			texture_addresses.push_back(file->GetCurrentAddress());
+			file->WriteNullTerminatedString(textures[i].c_str());
 		}
 
-		size_t bookmark=file->getCurrentAddress();
+		size_t bookmark=file->GetCurrentAddress();
 
-		file->goToAddress(head_address + 8);
-		file->writeInt32A(&table_address, false);
+		file->SetAddress(head_address + 8);
+		file->Write<u32>(table_address); // TODO Table stuff: false
 
 		for (size_t i=0; i<texture_count; i++) {
-			file->goToAddress(texture_address + i*20 + 4);
-			size_t address=texture_addresses[i];
-			file->writeInt32A(&address);
-			file->writeInt32(&sizes[i]);
+			file->SetAddress(texture_address + i*20 + 4);
+			file->WriteAddressFileEndianess(texture_addresses[i]);
+			file->Write<u32>(sizes[i]);
 		}
 
-		file->goToAddress(bookmark);
+		file->SetAddress(bookmark);
 	}
 
-	unsigned int SonicXNTexture::addTexture(string name) {
+	unsigned int SonicXNTexture::addTexture(std::string name) {
 		for (size_t i=0; i<textures.size(); i++) {
 			if (textures[i] == name) {
 				return i;

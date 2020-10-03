@@ -17,14 +17,13 @@
 //    Read AUTHORS.txt, LICENSE.txt and COPYRIGHT.txt for more details.
 //=========================================================================
 
-#include "LibGens.h"
 #include <algorithm>
 #include "S06XnFile.h"
 
-namespace LibGens {
+namespace LibS06 {
 	void SonicVertex::read(File *file, unsigned int vertex_size, bool big_endian, unsigned int vertex_flag, XNFileMode file_mode) {
 		size_t address=0;
-		normal = Vector3(0,0,0);
+		normal = glm::vec3(0,0,0);
 		bone_indices[0]=bone_indices[1]=bone_indices[2]=bone_indices[3]=0;
 		bone_weights_f[0]=1.0f;
 		bone_weights_f[1]=bone_weights_f[2]=bone_weights_f[3]=0;
@@ -33,19 +32,22 @@ namespace LibGens {
 		if (file_mode != MODE_ENO) {
 			// Position
 			if (vertex_flag & 0x1) {
-				position.read(file, big_endian);
+				position = file->Read<glm::vec3>();
 			}
 
 			// Bone Weights
 			if (vertex_flag & 0x7000) {
-				file->readFloat32E(&bone_weights_f[0], big_endian);
-				file->readFloat32E(&bone_weights_f[1], big_endian);
-				file->readFloat32E(&bone_weights_f[2], big_endian);;
+				bone_weights_f[0] = file->Read<float>();
+				bone_weights_f[1] = file->Read<float>();
+				bone_weights_f[2] = file->Read<float>();;
 			}
 
 			// Bone Indices
 			if (vertex_flag & 0x400) {
-				file->read(bone_indices, 4);
+				bone_indices[0] = file->Read<u8>();
+				bone_indices[1] = file->Read<u8>();
+				bone_indices[2] = file->Read<u8>();
+				bone_indices[3] = file->Read<u8>();
 			}
 			else {
 				total_weight += bone_weights_f[0] + bone_weights_f[1] + bone_weights_f[2];
@@ -58,35 +60,35 @@ namespace LibGens {
 
 			// Normal
 			if (vertex_flag & 0x2) {
-				normal.read(file, big_endian);
+				normal = file->Read<glm::vec3>();
 			}
 
 			// RGBA 1
 			if (vertex_flag & 0x8) {
-				file->readUChar(&rgba[2]);
-				file->readUChar(&rgba[1]);
-				file->readUChar(&rgba[0]);
-				file->readUChar(&rgba[3]);
+				rgba[2] = file->Read<u8>();
+				rgba[1] = file->Read<u8>();
+				rgba[0] = file->Read<u8>();
+				rgba[3] = file->Read<u8>();
 			}
 
 			// RGBA 2
 			if (vertex_flag & 0x10) {
-				file->readUChar(&rgba_2[2]);
-				file->readUChar(&rgba_2[1]);
-				file->readUChar(&rgba_2[0]);
-				file->readUChar(&rgba_2[3]);
+				rgba_2[2] = file->Read<u8>();
+				rgba_2[1] = file->Read<u8>();
+				rgba_2[0] = file->Read<u8>();
+				rgba_2[3] = file->Read<u8>();
 			}
 
 			// UV Channel 1
 			size_t uv_channels = vertex_flag / (0x10000);
 			for (size_t i=0; i<uv_channels; i++) {
-				uv[i].read(file, big_endian);
+				uv[i] = file->Read<glm::vec2>();
 			}
 
 			// Tangent / Binormal
 			if (vertex_flag & 0x140) {
-				tangent.read(file, big_endian);
-				binormal.read(file, big_endian);
+				tangent = file->Read<glm::vec3>(); 
+				binormal = file->Read<glm::vec3>();
 			}
 			
 			bone_weights_f[3] = 1.0 - bone_weights_f[0] - bone_weights_f[1] - bone_weights_f[2];
@@ -94,22 +96,25 @@ namespace LibGens {
 		}
 		else {
 			if (vertex_flag == 0x310005) {
-				position.read(file, big_endian);
-				normal.readNormal360(file, big_endian);
-				uv[0].readHalf(file, big_endian);
+				position = file->Read<glm::vec3>();
+				normal = file->ReadNormal360();
+				uv[0].x = file->ReadHalf();
+				uv[0].y = file->ReadHalf();
 			}
 			else if (vertex_flag == 0x317405) {
-				position.read(file, big_endian);
-				normal.read(file, big_endian);
-				file->moveAddress(8);
-				uv[0].readHalf(file, big_endian);
+				position = file->Read<glm::vec3>();
+				normal = file->Read<glm::vec3>();
+				file->OffsetAddress(8);
+				uv[0].x = file->ReadHalf();
+				uv[0].y = file->ReadHalf();
 			}
 			else if (vertex_flag == 0x317685) {
-				position.read(file, big_endian);
-				normal.read(file, big_endian);
-				file->moveAddress(8);
-				uv[0].readHalf(file, big_endian);
-				file->moveAddress(8);
+				position = file->Read<glm::vec3>();
+				normal = file->Read<glm::vec3>();
+				file->OffsetAddress(8);
+				uv[0].x = file->ReadHalf();
+				uv[0].y = file->ReadHalf();
+				file->OffsetAddress(8);
 			}
 			else {
 				printf("Unhandled vertex flag: %d\n", vertex_flag);
@@ -121,110 +126,102 @@ namespace LibGens {
 	void SonicVertex::write(File *file, unsigned int vertex_size, bool big_endian, unsigned int vertex_flag, XNFileMode file_mode) {
 		// Position
 		if (vertex_flag & 0x1) {
-			position.write(file, big_endian);
+			file->Write<glm::vec3>(position);
 		}
 
 		// Bone Weights
 		if (vertex_flag & 0x7000) {
-			file->writeFloat32E(&bone_weights_f[0], big_endian);
-			file->writeFloat32E(&bone_weights_f[1], big_endian);
-			file->writeFloat32E(&bone_weights_f[2], big_endian);
+			file->Write<float>(bone_weights_f[0]);
+			file->Write<float>(bone_weights_f[1]);
+			file->Write<float>(bone_weights_f[2]);
 		}
 
 		// Bone Indices
 		if (vertex_flag & 0x400) {
-			file->write(bone_indices, 4);
+			file->Write<u8>(bone_indices[0]);
+			file->Write<u8>(bone_indices[1]);
+			file->Write<u8>(bone_indices[2]);
+			file->Write<u8>(bone_indices[3]);
 		}
 
 		// Normal
 		if (vertex_flag & 0x2) {
-			normal.write(file, big_endian);
+			file->Write<glm::vec3>(normal);
 		}
 
-		// RGBA 1
+		// RGBA 1, stored in the file as BGRA
 		if (vertex_flag & 0x8) {
-			file->writeUChar(&rgba[2]);
-			file->writeUChar(&rgba[1]);
-			file->writeUChar(&rgba[0]);
-			file->writeUChar(&rgba[3]);
+			file->Write<u8>(rgba[2]);
+			file->Write<u8>(rgba[1]);
+			file->Write<u8>(rgba[0]);
+			file->Write<u8>(rgba[3]);
 		}
 
-		// RGBA 2
+		// RGBA 2, stored in the file as BGRA
 		if (vertex_flag & 0x10) {
-			file->writeUChar(&rgba_2[2]);
-			file->writeUChar(&rgba_2[1]);
-			file->writeUChar(&rgba_2[0]);
-			file->writeUChar(&rgba_2[3]);
+			file->Write<u8>(rgba_2[2]);
+			file->Write<u8>(rgba_2[1]);
+			file->Write<u8>(rgba_2[0]);
+			file->Write<u8>(rgba_2[3]);
 		}
 
 		// UV Channel 1
 		size_t uv_channels = vertex_flag / (0x10000);
 		for (size_t i=0; i<uv_channels; i++) {
-			uv[i].write(file, big_endian);
+			file->Write<glm::vec2>(uv[i]);
 		}
 
 		// Tangent / Binormal
 		if (vertex_flag & 0x140) {
-			tangent.write(file, big_endian);
-			binormal.write(file, big_endian);
+			file->Write<glm::vec3>(tangent);
+			file->Write<glm::vec3>(binormal);
 		}
 			
 	}
 
 	void SonicVertexTable::read(File *file, XNFileMode file_mode, bool big_endian) {
-		unsigned int table_count=0;
-		size_t table_address=0;
-
-		file->readInt32E(&table_count, big_endian);
-		file->readInt32EA(&table_address, big_endian);
+		unsigned int table_count = file->Read<u32>();
+		size_t table_address = file->ReadAddressFileEndianess();
 
 		if (table_count > 1) {
 			printf("Unhandled Case Vertex Table %d.\n", table_count);
 			getchar();
 		}
 
-		file->goToAddress(table_address);
+		file->SetAddress(table_address);
 
-		unsigned int vertex_count=0;
-		size_t vertex_offset=0;
+		flag_1 = file->Read<u32>();
+		flag_2 = file->Read<u32>();
+		vertex_size = file->Read<u32>();
+		unsigned int vertex_count = file->Read<u32>();
+		size_t vertex_offset = file->ReadAddressFileEndianess();
 
-		file->readInt32E(&flag_1, big_endian);
-		file->readInt32E(&flag_2, big_endian);
-		file->readInt32E(&vertex_size, big_endian);
-		file->readInt32E(&vertex_count, big_endian);
-		file->readInt32EA(&vertex_offset, big_endian);
-
-
-		unsigned int bone_table_count=0;
-		size_t bone_table_offset=0;
-
-		file->readInt32E(&bone_table_count, big_endian);
-		file->readInt32EA(&bone_table_offset, big_endian);
+		unsigned int bone_table_count= file->Read<u32>();
+		size_t bone_table_offset = file->ReadAddressFileEndianess();
 
 		printf("%d %d %d\n", vertex_size, vertex_offset, bone_table_count);
 		printf("Flags: %d %d\n", flag_1, flag_2);
 
-		Error::addMessage(Error::WARNING, "Vertex Size / Vertex Flag 1 / Vertex Flag 2: " + ToString(vertex_size) + " / " + ToString(flag_1) + " / " + ToString(flag_2));
+		Error::AddMessage(Error::LogType::WARNING, "Vertex Size / Vertex Flag 1 / Vertex Flag 2: " + ToString(vertex_size) + " / " + ToString(flag_1) + " / " + ToString(flag_2));
 
 		if(bone_table_count > 32) {
 			printf("Bone table is bigger than 32! Size: %d\n", bone_table_count);
 			getchar();
 		}
 
-		string bone_table_str="Bone Blending Table: ";
+		std::string bone_table_str="Bone Blending Table: ";
 		for (size_t i=0; i<bone_table_count; i++) {
-			file->goToAddress(bone_table_offset + i*4);
-			unsigned int bone=0;
-			file->readInt32E(&bone, big_endian);
+			file->SetAddress(bone_table_offset + i*4);
+			unsigned int bone = file->Read<u32>();
 			bone_table.push_back(bone);
 
 			bone_table_str += ToString(bone) + " ";
 		}
 
-		Error::addMessage(Error::WARNING, "Vertex Table with a bone blending table of size " + ToString(bone_table.size()));
+		Error::AddMessage(Error::LogType::WARNING, "Vertex Table with a bone blending table of size " + ToString(bone_table.size()));
 
 		for (size_t i=0; i<vertex_count; i++) {
-			file->goToAddress(vertex_offset + i * vertex_size);
+			file->SetAddress(vertex_offset + i * vertex_size);
 			SonicVertex *vertex = new SonicVertex();
 			vertex->read(file, vertex_size, big_endian, flag_1, file_mode);
 			vertices.push_back(vertex);
@@ -234,7 +231,7 @@ namespace LibGens {
 	}
 
 	void SonicVertexTable::writeVertices(File *file, XNFileMode file_mode) {
-		vertex_buffer_address = file->getCurrentAddress();
+		vertex_buffer_address = file->GetCurrentAddress();
 
 		for (size_t i=0; i<vertices.size(); i++) {
 			vertices[i]->write(file, vertex_size, false, flag_1, file_mode);
@@ -242,37 +239,37 @@ namespace LibGens {
 	}
 
 	void SonicVertexTable::writeTable(File *file) {
-		size_t bone_table_address = file->getCurrentAddress();
+		size_t bone_table_address = file->GetCurrentAddress();
 		for (size_t i=0; i<bone_table.size(); i++) {
-			file->writeInt32(&bone_table[i]);
+			file->Write<u32>(bone_table[i]);
 		}
 
-		vertex_table_address = file->getCurrentAddress();
+		vertex_table_address = file->GetCurrentAddress();
 
-		file->writeInt32(&flag_1);
-		file->writeInt32(&flag_2);
-		file->writeInt32(&vertex_size);
+		file->Write<u32>(flag_1);
+		file->Write<u32>(flag_2);
+		file->Write<u32>(vertex_size);
 		unsigned int vertex_count = vertices.size();
-		file->writeInt32(&vertex_count);
-		file->writeNull(4);
+		file->Write<u32>(vertex_count);
+		file->WriteByte(0, 4);
 
-		unsigned int bone_table_count=bone_table.size();
-		file->writeInt32(&bone_table_count);
-		if (bone_table_count) file->writeInt32A(&bone_table_address);
-		else file->writeNull(4);
+		unsigned int bone_table_count = bone_table.size();
+		file->Write<u32>(bone_table_count);
+		if (bone_table_count) file->WriteAddressFileEndianess(bone_table_address);
+		else file->WriteByte(0, 4);
 
-		file->writeNull(20);
+		file->WriteByte(0, 20);
 	}
 
 	void SonicVertexTable::writeTableFixed(File *file) {
-		file->goToAddress(vertex_table_address + 16);
-		file->writeInt32A(&vertex_buffer_address);
+		file->SetAddress(vertex_table_address + 16);
+		file->Write<u32>(vertex_buffer_address);
 	}
 
 	void SonicVertexTable::write(File *file) {
 		unsigned int total=1;
-		file->writeInt32(&total);
-		file->writeInt32A(&vertex_table_address);
+		file->Write<u32>(total);
+		file->Write<u32>(vertex_table_address);
 	}
 
 	void SonicVertexTable::setScale(float scale) {

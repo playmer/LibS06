@@ -17,85 +17,58 @@
 //    Read AUTHORS.txt, LICENSE.txt and COPYRIGHT.txt for more details.
 //=========================================================================
 
-#include "LibGens.h"
 #include <algorithm>
 #include "S06XnFile.h"
 
-namespace LibGens {
+namespace LibS06 {
 	void SonicVertexResourceTable::read(File *file, XNFileMode file_mode, bool big_endian) {
-		unsigned int table_count=0;
-		size_t table_address=0;
-
-		file->readInt32E(&table_count, big_endian);
-		file->readInt32EA(&table_address, big_endian);
+		unsigned int table_count = file->Read<u32>();
+		size_t table_address = file->ReadAddressFileEndianess();
 
 		if ((table_count != 1) && (table_count != 16)) {
 			printf("Unhandled Case Vertex Resource Table %d.\n", table_count);
 			getchar();
 		}
 
-		Error::addMessage(Error::WARNING, "Vertex Resource Table of type " + ToString(table_count) + " at " + ToString(table_address));
+		Error::AddMessage(Error::LogType::WARNING, "Vertex Resource Table of type " + ToString(table_count) + " at " + ToString(table_address));
 
-		file->goToAddress(table_address);
+		file->SetAddress(table_address);
 
-		unsigned short position_type_flag=0;
-		unsigned short position_total=0;
-		size_t position_address=0;
-		file->readInt16E(&position_type_flag, big_endian);
-		file->readInt16E(&position_total, big_endian);
-		file->readInt32EA(&position_address, big_endian);
+		unsigned short position_type_flag = file->Read<u16>();
+		unsigned short position_total = file->Read<u16>();
+		size_t position_address = file->ReadAddressFileEndianess();
 
-		unsigned short normal_type_flag=0;
-		unsigned short normal_total=0;
-		size_t normal_address=0;
-		file->readInt16E(&normal_type_flag, big_endian);
-		file->readInt16E(&normal_total, big_endian);
-		file->readInt32EA(&normal_address, big_endian);
+		unsigned short normal_type_flag = file->Read<u16>();
+		unsigned short normal_total = file->Read<u16>();
+		size_t normal_address = file->ReadAddressFileEndianess();
 
+		unsigned short color_type_flag = file->Read<u32>();
+		unsigned short color_total = file->Read<u32>();
+		size_t color_address = file->ReadAddressFileEndianess();
 
-		unsigned short color_type_flag=0;
-		unsigned short color_total=0;
-		size_t color_address=0;
-		file->readInt16E(&color_type_flag, big_endian);
-		file->readInt16E(&color_total, big_endian);
-		file->readInt32EA(&color_address, big_endian);
+		unsigned short uv_type_flag = file->Read<u32>();
+		unsigned short uv_total = file->Read<u32>();
+		size_t uv_address = file->ReadAddressFileEndianess();
 
+		unsigned short uv2_type_flag = file->Read<u32>();
+		unsigned short uv2_total = file->Read<u32>();
+		size_t uv2_address = file->ReadAddressFileEndianess();
 
-		unsigned short uv_type_flag=0;
-		unsigned short uv_total=0;
-		size_t uv_address=0;
-		file->readInt16E(&uv_type_flag, big_endian);
-		file->readInt16E(&uv_total, big_endian);
-		file->readInt32EA(&uv_address, big_endian);
+		unsigned short bones_type_flag = file->Read<u32>();
+		unsigned short bones_total = file->Read<u32>();
+		size_t bones_address = file->ReadAddressFileEndianess();
 
-		unsigned short uv2_type_flag=0;
-		unsigned short uv2_total=0;
-		size_t uv2_address=0;
-		file->readInt16E(&uv2_type_flag, big_endian);
-		file->readInt16E(&uv2_total, big_endian);
-		file->readInt32EA(&uv2_address, big_endian);
+		unsigned short unknown_type_flag = file->Read<u32>();
+		unsigned short unknown_total = file->Read<u32>();
+		size_t unknown_address = file->ReadAddressFileEndianess();
 
-		unsigned short bones_type_flag=0;
-		unsigned short bones_total=0;
-		size_t bones_address=0;
-		file->readInt16E(&bones_type_flag, big_endian);
-		file->readInt16E(&bones_total, big_endian);
-		file->readInt32EA(&bones_address, big_endian);
-
-		unsigned short unknown_type_flag=0;
-		unsigned short unknown_total=0;
-		size_t unknown_address=0;
-		file->readInt16E(&unknown_type_flag, big_endian);
-		file->readInt16E(&unknown_total, big_endian);
-		file->readInt32EA(&unknown_address, big_endian);
-
-		Error::addMessage(Error::WARNING, "  Positions: " + ToString(position_total) + "(" + ToString(position_type_flag) + ")");
-		Error::addMessage(Error::WARNING, "  Normals  : " + ToString(normal_total)   + "(" + ToString(normal_type_flag) + ")");
-		Error::addMessage(Error::WARNING, "  Colors   : " + ToString(color_total) + "(" + ToString(color_type_flag) + ")");
-		Error::addMessage(Error::WARNING, "  UVs      : " + ToString(uv_total) + "(" + ToString(uv_type_flag) + ")");
-		Error::addMessage(Error::WARNING, "  UV2s     : " + ToString(uv2_total) + "(" + ToString(uv2_type_flag) + ")");
-		Error::addMessage(Error::WARNING, "  Bones    : " + ToString(bones_total) + "(" + ToString(bones_type_flag) + ")");
-		Error::addMessage(Error::WARNING, "  Unknown  : " + ToString(unknown_total) + "(" + ToString(unknown_type_flag) + ")");
+		Error::AddMessage(Error::LogType::WARNING, "  Positions: " + ToString(position_total) + "(" + ToString(position_type_flag) + ")");
+		Error::AddMessage(Error::LogType::WARNING, "  Normals  : " + ToString(normal_total)   + "(" + ToString(normal_type_flag) + ")");
+		Error::AddMessage(Error::LogType::WARNING, "  Colors   : " + ToString(color_total) + "(" + ToString(color_type_flag) + ")");
+		Error::AddMessage(Error::LogType::WARNING, "  UVs      : " + ToString(uv_total) + "(" + ToString(uv_type_flag) + ")");
+		Error::AddMessage(Error::LogType::WARNING, "  UV2s     : " + ToString(uv2_total) + "(" + ToString(uv2_type_flag) + ")");
+		Error::AddMessage(Error::LogType::WARNING, "  Bones    : " + ToString(bones_total) + "(" + ToString(bones_type_flag) + ")");
+		Error::AddMessage(Error::LogType::WARNING, "  Unknown  : " + ToString(unknown_total) + "(" + ToString(unknown_type_flag) + ")");
 
 		if (unknown_total > 0) {
 			printf("The unknown total in the vertex resource table is used, not cracked yet.\n");
@@ -108,23 +81,23 @@ namespace LibGens {
 			float fz = 0;
 
 			if (position_type_flag == 1) {
-				file->goToAddress(position_address + i*12);
-				file->readFloat32E(&fx, big_endian);
-				file->readFloat32E(&fy, big_endian);
-				file->readFloat32E(&fz, big_endian);
+				file->SetAddress(position_address + i*12);
+				fx = file->Read<f32>();
+				fy = file->Read<f32>();
+				fz = file->Read<f32>();
 			}
 			else if ((position_type_flag >= 3) && (position_type_flag <= 8)) {
-				file->goToAddress(position_address + i*6);
+				file->SetAddress(position_address + i*6);
 
 				unsigned short pow_factor=position_type_flag-2;
 				float div_factor=pow(4.0, (double)pow_factor);
 
 				short f=0;
-				file->readInt16E((unsigned short *)(&f), big_endian);
+				f = (short)file->Read<u16>();
 				fx = f/div_factor;
-				file->readInt16E((unsigned short *)(&f), big_endian);
+				f = (short)file->Read<u16>();
 				fy = f/div_factor;
-				file->readInt16E((unsigned short *)(&f), big_endian);
+				f = (short)file->Read<u16>();
 				fz = f/div_factor;
 			}
 			else {
@@ -132,7 +105,7 @@ namespace LibGens {
 				getchar();
 			}
 
-			Vector3 position(fx, fy, fz);
+			glm::vec3 position(fx, fy, fz);
 			positions.push_back(position);
 		}
 
@@ -144,14 +117,14 @@ namespace LibGens {
 			float fz = 0.0;
 
 			if (normal_type_flag == 3) {
-				file->goToAddress(normal_address + i*3);
+				file->SetAddress(normal_address + i*3);
 
 				char f=0;
-				file->readUChar((unsigned char *) (&f));
+				f= (char)file->Read<unsigned char>();
 				fx = ((int)f);
-				file->readUChar((unsigned char *) (&f));
+				f= (char)file->Read<unsigned char>();
 				fy = ((int)f);
-				file->readUChar((unsigned char *) (&f));
+				f= (char)file->Read<unsigned char>();
 				fz = ((int)f);
 			}
 			else {
@@ -159,19 +132,19 @@ namespace LibGens {
 				getchar();
 			}
 
-			Vector3 normal(fx, fy, fz);
-			normal.normalise();
+			glm::vec3 normal(fx, fy, fz);
+			glm::normalize(normal);
 			normals.push_back(normal);
 		}
 
 
 		
 		for (size_t i=0; i<color_total; i++) {
-			Color color;
+			glm::vec4 color;
 
 			if (color_type_flag == 1) {
-				file->goToAddress(color_address + i*4);
-				color.readRGBA8(file);
+				file->SetAddress(color_address + i*4);
+				color = file->ReadRGBA8();
 			}
 			else {
 				printf("Unhandled color type case %d at address %d\n", color_type_flag, color_address);
@@ -187,21 +160,21 @@ namespace LibGens {
 			float fy = 0.0;
 
 			if (uv_type_flag == 2) {
-				file->goToAddress(uv_address + i*4);
+				file->SetAddress(uv_address + i*4);
 
 				short f=0;
-				file->readInt16E((unsigned short *)(&f), big_endian);
+				f = (short)file->Read<u16>();
 				fx = f/256.0;
-				file->readInt16E((unsigned short *)(&f), big_endian);
+				f = (short)file->Read<u16>();
 				fy = f/256.0;
 			}
 			else if (uv_type_flag == 3) {
-				file->goToAddress(uv_address + i*4);
+				file->SetAddress(uv_address + i*4);
 
 				short f=0;
-				file->readInt16E((unsigned short *)(&f), big_endian);
+				f = (short)file->Read<u16>();
 				fx = f/1024.0;
-				file->readInt16E((unsigned short *)(&f), big_endian);
+				f = (short)file->Read<u16>();
 				fy = f/1024.0;
 			}
 			else {
@@ -209,7 +182,7 @@ namespace LibGens {
 				getchar();
 			}
 
-			Vector2 uv(fx, fy);
+			glm::vec2 uv(fx, fy);
 			uvs.push_back(uv);
 		}
 
@@ -219,21 +192,21 @@ namespace LibGens {
 			float fy = 0.0;
 
 			if (uv2_type_flag == 2) {
-				file->goToAddress(uv2_address + i*4);
+				file->SetAddress(uv2_address + i*4);
 
 				short f=0;
-				file->readInt16E((unsigned short *)(&f), big_endian);
+				f = (short)file->Read<u16>();
 				fx = f/256.0;
-				file->readInt16E((unsigned short *)(&f), big_endian);
+				f  = (short)file->Read<u16>();
 				fy = f/256.0;
 			}
 			else if (uv2_type_flag == 3) {
-				file->goToAddress(uv2_address + i*4);
+				file->SetAddress(uv2_address + i*4);
 
 				short f=0;
-				file->readInt16E((unsigned short *)(&f), big_endian);
+				f = (short)file->Read<u16>();
 				fx = f/1024.0;
-				file->readInt16E((unsigned short *)(&f), big_endian);
+				f = (short)file->Read<u16>();
 				fy = f/1024.0;
 			}
 			else {
@@ -241,7 +214,7 @@ namespace LibGens {
 				getchar();
 			}
 
-			Vector2 uv(fx, fy);
+			glm::vec2 uv(fx, fy);
 			uvs_2.push_back(uv);
 		}
 
@@ -251,10 +224,10 @@ namespace LibGens {
 			bone_data.weight = 0;
 
 			if (bones_type_flag == 1) {
-				file->goToAddress(bones_address + i*4);
-				file->readUChar(&(bone_data.bone_1));
-				file->readUChar(&(bone_data.bone_2));
-				file->readInt16BE(&(bone_data.weight));
+				file->SetAddress(bones_address + i*4);
+				bone_data.bone_1 = file->Read<u8>();
+				bone_data.bone_2 = file->Read<u8>();
+				bone_data.weight = file->Read<u16>(Endianess::Big);
 				bones.push_back(bone_data);
 			}
 			else {

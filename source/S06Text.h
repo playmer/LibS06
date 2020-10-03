@@ -19,14 +19,16 @@
 
 #pragma once
 
-#define LIBGENS_S06_TEXT_ERROR_MESSAGE_NULL_FILE         "Trying to read text data from unreferenced file."
-#define LIBGENS_S06_TEXT_ERROR_MESSAGE_WRITE_NULL_FILE   "Trying to write text data to an unreferenced file."
+#include <string>
 
-namespace LibGens {
+#define LIBS06_TEXT_ERROR_MESSAGE_NULL_FILE         "Trying to read text data from unreferenced file."
+#define LIBS06_TEXT_ERROR_MESSAGE_WRITE_NULL_FILE   "Trying to write text data to an unreferenced file."
+
+namespace LibS06 {
 	class SonicTextEntry {
 		protected:
-			string id;
-			string value;
+			std::string id;
+			std::string value;
 
 			size_t file_address;
 			size_t parameter_address;
@@ -39,7 +41,7 @@ namespace LibGens {
 			void writeFixed(File *file);
 			void writeValues(File *file);
 
-			void setValue(string v) {
+			void setValue(std::string v) {
 				value = v;
 			}
 	};
@@ -48,13 +50,13 @@ namespace LibGens {
 		protected:
 			char *table;
 			unsigned int table_size;
-			string name;
-			vector<SonicTextEntry *> entries;
+			std::string name;
+			std::vector<SonicTextEntry *> entries;
 			SonicStringTable string_table;
 		public:
-			SonicText(string filename);
+			SonicText(std::string filename);
 			void read(File *file);
-			void save(string filename);
+			void save(std::string filename);
 			void write(File *file);
 	};
 };

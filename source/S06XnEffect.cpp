@@ -17,129 +17,115 @@
 //    Read AUTHORS.txt, LICENSE.txt and COPYRIGHT.txt for more details.
 //=========================================================================
 
-#include "LibGens.h"
 #include "S06XnFile.h"
 
-namespace LibGens {
+namespace LibS06 {
 	void SonicXNEffect::read(File *file) {
 		SonicXNSection::read(file);
 
-		size_t table_address=0;
-		file->readInt32EA(&table_address, big_endian);
-		file->goToAddress(table_address+4);
+		size_t table_address = file->ReadAddressFileEndianess();
+		file->SetAddress(table_address+4);
 
-		unsigned int shader_count=0;
-		size_t shader_address=0;
-		unsigned int name_count=0;
-		size_t name_address=0;
-		unsigned int extras_count=0;
-		size_t extras_address=0;
+		unsigned int shader_count = file->Read<u32>();
+		size_t shader_address = file->ReadAddressFileEndianess();
 
-		file->readInt32E(&shader_count, big_endian);
-		file->readInt32EA(&shader_address, big_endian);
+		unsigned int name_count = file->Read<u32>();
+		size_t name_address = file->ReadAddressFileEndianess();
 
-		file->readInt32E(&name_count, big_endian);
-		file->readInt32EA(&name_address, big_endian);
-
-		file->readInt32E(&extras_count, big_endian);
-		file->readInt32EA(&extras_address, big_endian);
+		unsigned int extras_count = file->Read<u32>();
+		size_t extras_address = file->ReadAddressFileEndianess();
 
 		for (size_t i=0; i<shader_count; i++) {
-			file->goToAddress(shader_address + i*8 + 4);
-			size_t string_address=0;
-			string shader="";
-			file->readInt32EA(&string_address, big_endian);
-			file->goToAddress(string_address);
-			file->readString(&shader);
+			file->SetAddress(shader_address + i*8 + 4);
+			size_t string_address = file->ReadAddressFileEndianess();
+			file->SetAddress(string_address);
+			std::string shader = file->ReadNullTerminatedString();
 			material_shaders.push_back(shader);
 		}
 
 
 		for (size_t i=0; i<name_count; i++) {
-			file->goToAddress(name_address + i*12 + 4);
-			unsigned int index=0;
-			size_t string_address=0;
-			string name="";
-			file->readInt32E(&index, big_endian);
-			file->readInt32EA(&string_address, big_endian);
-			file->goToAddress(string_address);
-			file->readString(&name);
+			file->SetAddress(name_address + i*12 + 4);
+			unsigned int index = file->Read<u32>();
+			size_t string_address = file->ReadAddress(big_endian);
+			file->SetAddress(string_address);
+			std::string name = file->ReadNullTerminatedString();
 			material_indices.push_back(index);
 			material_names.push_back(name);
 		}
 
 		for (size_t i=0; i<extras_count; i++) {
-			file->goToAddress(extras_address + i*2);
+			file->SetAddress(extras_address + i*2);
 			unsigned short extra=0;
-			file->readInt16E(&extra, big_endian);
+			extra = file->Read<u16>();
 			extras.push_back(extra);
 		}
 	}
 
 	
 	void SonicXNEffect::writeBody(File *file) {
-		file->fixPadding(16);
+		file->FixPadding(16);
 
-		size_t shader_address=file->getCurrentAddress();
-		file->writeNull(material_shaders.size() * 8);
+		size_t shader_address=file->GetCurrentAddress();
+		file->WriteByte(0, material_shaders.size() * 8);
 
-		size_t name_address=file->getCurrentAddress();
-		file->writeNull(material_names.size() * 12);
+		size_t name_address=file->GetCurrentAddress();
+		file->WriteByte(0, material_names.size() * 12);
 
-		size_t extras_address=file->getCurrentAddress();
-		file->writeNull(extras.size() * 2);
-		file->fixPadding(4);
+		size_t extras_address=file->GetCurrentAddress();
+		file->WriteByte(0, extras.size() * 2);
+		file->FixPadding(4);
 
-		size_t table_address=file->getCurrentAddress();
+		size_t table_address=file->GetCurrentAddress();
 		unsigned int shader_count = material_shaders.size();
 		unsigned int name_count = material_names.size();
 		unsigned int extras_count = extras.size();
 
-		file->writeNull(4);
-		file->writeInt32(&shader_count);
-		file->writeInt32A(&shader_address);
+		file->WriteByte(0, 4);
+		file->Write<u32>(shader_count);
+		file->WriteAddressFileEndianess(shader_address);
 
-		file->writeInt32(&name_count);
-		file->writeInt32A(&name_address);
+		file->Write<u32>(name_count);
+		file->WriteAddressFileEndianess(name_address);
 
-		file->writeInt32(&extras_count);
-		file->writeInt32A(&extras_address);
+		file->Write<u32>(extras_count);
+		file->WriteAddressFileEndianess(extras_address);
 
 
 		material_shaders_addresses.clear();
 		for (size_t i=0; i<shader_count; i++) {
-			material_shaders_addresses.push_back(file->getCurrentAddress());
-			file->writeString(&material_shaders[i]);
+			material_shaders_addresses.push_back(file->GetCurrentAddress());
+			file->WriteNullTerminatedString(material_shaders[i].c_str());
 		}
 
 		material_names_addresses.clear();
 		for (size_t i=0; i<name_count; i++) {
-			material_names_addresses.push_back(file->getCurrentAddress());
-			file->writeString(&material_names[i]);
+			material_names_addresses.push_back(file->GetCurrentAddress());
+			file->WriteNullTerminatedString(material_names[i].c_str());
 		}
 
-		size_t bookmark=file->getCurrentAddress();
+		size_t bookmark=file->GetCurrentAddress();
 		
-		file->goToAddress(head_address + 8);
-		file->writeInt32A(&table_address, false);
+		file->SetAddress(head_address + 8);
+		file->WriteAddressFileEndianess(table_address); // TODO: TABLE ADDRESSES this passed true
 
 		for (size_t i=0; i<shader_count; i++) {
-			file->goToAddress(shader_address + i*8 + 4);
-			file->writeInt32A(&material_shaders_addresses[i]);
+			file->SetAddress(shader_address + i*8 + 4);
+			file->WriteAddressFileEndianess(material_shaders_addresses[i]);
 		}
 
 		for (size_t i=0; i<name_count; i++) {
-			file->goToAddress(name_address + i*12 + 4);
-			file->writeInt32(&material_indices[i]);
-			file->writeInt32A(&material_names_addresses[i]);
+			file->SetAddress(name_address + i*12 + 4);
+			file->Write<u32>(material_indices[i]);
+			file->WriteAddressFileEndianess(material_names_addresses[i]);
 		}
 
 		for (size_t i=0; i<extras_count; i++) {
-			file->goToAddress(extras_address + i*2);
-			file->writeInt16(&extras[i]);
+			file->SetAddress(extras_address + i*2);
+			file->Write(extras[i]);
 		}
 
 
-		file->goToAddress(bookmark);
+		file->SetAddress(bookmark);
 	}
 }

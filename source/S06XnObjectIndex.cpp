@@ -17,20 +17,19 @@
 //    Read AUTHORS.txt, LICENSE.txt and COPYRIGHT.txt for more details.
 //=========================================================================
 
-#include "LibGens.h"
 #include <algorithm>
 #include "S06XnFile.h"
 
-namespace LibGens {
+namespace LibS06 {
 	void SonicIndexTable::read(File *file, bool big_endian) {
-		unsigned int table_count=0;
-		size_t table_address=0;
+		unsigned int table_count = 0;
+		size_t table_address = 0;
 
-		file->readInt32E(&table_count, big_endian);
-		file->readInt32EA(&table_address, big_endian);
+		table_count = file->Read<u32>();
+		table_address = file->ReadAddressFileEndianess();
 
-		file->goToAddress(table_address);
-		file->readInt32E(&flag, big_endian);
+		file->SetAddress(table_address);
+		flag = file->Read<u32>();
 
 		printf("Reading Index Table with flag %d at %d\n", flag, table_address);
 
@@ -39,15 +38,14 @@ namespace LibGens {
 		unsigned int index_morph_count=0;
 		size_t index_morph_address=0;
 		size_t index_address=0;
-		file->readInt32E(&index_count, big_endian);
-		file->readInt32E(&index_morph_count, big_endian);
-		file->readInt32EA(&index_morph_address, big_endian);
-		file->readInt32EA(&index_address, big_endian);
+		index_count = file->Read<u32>();
+		index_morph_count = file->Read<u32>();
+		index_morph_address = file->ReadAddressFileEndianess();
+		index_address = file->ReadAddressFileEndianess();
 
 		for (size_t i=0; i<index_morph_count; i++) {
-			file->goToAddress(index_morph_address + i*2);
-			unsigned short index=0;
-			file->readInt16E(&index, big_endian);
+			file->SetAddress(index_morph_address + i*2);
+			unsigned short index = file->Read<u16>();
 			strip_sizes.push_back(index);
 		}
 		
@@ -62,22 +60,22 @@ namespace LibGens {
 				last_index_1 = last_index_2;
 				last_index_2 = index;
 	
-				file->goToAddress(index_address + i*2);
-				file->readInt16E(&index, big_endian);
+				file->SetAddress(index_address + i*2);
+				index = file->Read<u16>();
 				indices.push_back(index);
 				count++;
 
 				if ((index == last_index_1) || (index == last_index_2) || (last_index_1 == last_index_2)) {
-					//Error::addMessage(Error::WARNING, "Invalid triangle found at " + ToString(file->getCurrentAddress()-6) + ". Strip of size " + ToString(strip_sizes[m]) + " starts at " + ToString(index_address + additional_index*2));
+					Error::AddMessage(Error::LogType::WARNING, "Invalid triangle found at " + ToString(file->GetCurrentAddress()-6) + ". Strip of size " + ToString(strip_sizes[m]) + " starts at " + ToString(index_address + additional_index*2));
 					continue;
 				}
 			
 				if (count >= 3) {
 					if (count%2==1) {
-						indices_vector.push_back(Vector3(last_index_1, last_index_2, index));
+						indices_vector.push_back(glm::vec3(last_index_1, last_index_2, index));
 					}
 					else {
-						indices_vector.push_back(Vector3(index, last_index_2, last_index_1));
+						indices_vector.push_back(glm::vec3(index, last_index_2, last_index_1));
 					}
 				}
 
@@ -94,36 +92,36 @@ namespace LibGens {
 	
 
 	void SonicIndexTable::writeIndices(File *file) {
-		strip_sizes_address_data = file->getCurrentAddress();
+		strip_sizes_address_data = file->GetCurrentAddress();
 		for (size_t i=0; i<strip_sizes.size(); i++) {
-			file->writeInt16(&strip_sizes[i]);
+			file->Write(strip_sizes[i]);
 		}
-		file->fixPadding(4);
+		file->FixPadding(4);
 
-		indices_address_data = file->getCurrentAddress();
+		indices_address_data = file->GetCurrentAddress();
 		for (size_t i=0; i<indices.size(); i++) {
-			file->writeInt16(&indices[i]);
+			file->Write(indices[i]);
 		}
 
-		file->fixPadding(4);
+		file->FixPadding(4);
 	}
 
 	void SonicIndexTable::writeTable(File *file) {
-		indices_table_address = file->getCurrentAddress();
+		indices_table_address = file->GetCurrentAddress();
 
-		file->writeInt32(&flag);
+		file->Write<u32>(flag);
 		unsigned int indices_count=indices.size();
 		unsigned int indices_morph_count=strip_sizes.size();
-		file->writeInt32(&indices_count);
-		file->writeInt32(&indices_morph_count);
-		file->writeInt32A(&strip_sizes_address_data);
-		file->writeInt32A(&indices_address_data);
-		file->writeNull(12);
+		file->Write<u32>(indices_count);
+		file->Write<u32>(indices_morph_count);
+		file->WriteAddressFileEndianess(strip_sizes_address_data);
+		file->WriteAddressFileEndianess(indices_address_data);
+		file->WriteByte(0, 12);
 	}
 
 	void SonicIndexTable::write(File *file) {
 		unsigned int total=1;
-		file->writeInt32(&total);
-		file->writeInt32A(&indices_table_address);
+		file->Write<u32>(total);
+		file->WriteAddressFileEndianess(indices_table_address);
 	}
 };

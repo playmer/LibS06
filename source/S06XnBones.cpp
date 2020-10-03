@@ -17,34 +17,26 @@
 //    Read AUTHORS.txt, LICENSE.txt and COPYRIGHT.txt for more details.
 //=========================================================================
 
-#include "LibGens.h"
 #include "S06XnFile.h"
 
-namespace LibGens {
+namespace LibS06 {
 	void SonicXNBones::read(File *file) {
 		SonicXNSection::read(file);
 
-		size_t table_address=0;
-		file->readInt32EA(&table_address, big_endian);
-		file->goToAddress(table_address+4);
+		size_t table_address = file->ReadAddressFileEndianess();
+		file->SetAddress(table_address+4);
 
-		unsigned int bones_count=0;
-		size_t bones_address=0;
-		file->readInt32E(&bones_count, big_endian);
-		file->readInt32EA(&bones_address, big_endian);
+		unsigned int bones_count = file->Read<u32>();
+		size_t bones_address = file->ReadAddressFileEndianess();
 
 		for (size_t i=0; i<bones_count; i++) {
-			file->goToAddress(bones_address + i*8);
+			file->SetAddress(bones_address + i*8);
 
-			unsigned int index=0;
-			size_t name_address=0;
-			string name="";
+			unsigned int index = file->Read<u32>();
+			size_t name_address = file->ReadAddressFileEndianess();
 
-			file->readInt32E(&index, big_endian);
-			file->readInt32EA(&name_address, big_endian);
-
-			file->goToAddress(name_address);
-			file->readString(&name);
+			file->SetAddress(name_address);
+			std::string name = file->ReadNullTerminatedString();
 
 			bone_indices.push_back(index);
 			bone_names.push_back(name);
@@ -53,36 +45,36 @@ namespace LibGens {
 
 	
 	void SonicXNBones::writeBody(File *file) {
-		file->fixPadding(16);
+		file->FixPadding(16);
 
-		size_t bone_address=file->getCurrentAddress();
-		file->writeNull(bone_names.size() * 8);
+		size_t bone_address=file->GetCurrentAddress();
+		file->WriteByte(0, bone_names.size() * 8);
 
-		size_t table_address=file->getCurrentAddress();
+		size_t table_address=file->GetCurrentAddress();
 		unsigned int bone_count = bone_names.size();
 
-		file->writeNull(4);
-		file->writeInt32(&bone_count);
-		file->writeInt32A(&bone_address);
+		file->WriteByte(0, 4);
+		file->Write<u32>(bone_count);
+		file->WriteAddressFileEndianess(bone_address);
 
 		bone_names_addresses.clear();
 		for (size_t i=0; i<bone_count; i++) {
-			bone_names_addresses.push_back(file->getCurrentAddress());
-			file->writeString(&bone_names[i]);
+			bone_names_addresses.push_back(file->GetCurrentAddress());
+			file->WriteNullTerminatedString(bone_names[i].c_str());
 		}
 
-		size_t bookmark=file->getCurrentAddress();
+		size_t bookmark=file->GetCurrentAddress();
 
-		file->goToAddress(head_address + 8);
-		file->writeInt32A(&table_address, false);
+		file->SetAddress(head_address + 8);
+		file->WriteAddressFileEndianess(table_address); // TODO tables: this one is false
 
 		for (size_t i=0; i<bone_count; i++) {
-			file->goToAddress(bone_address + i*8);
+			file->SetAddress(bone_address + i*8);
 
-			file->writeInt32(&bone_indices[i]);
-			file->writeInt32A(&bone_names_addresses[i]);
+			file->Write<u32>(bone_indices[i]);
+			file->WriteAddressFileEndianess(bone_names_addresses[i]);
 		}
 
-		file->goToAddress(bookmark);
+		file->SetAddress(bookmark);
 	}
 }

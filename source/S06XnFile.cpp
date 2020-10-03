@@ -17,11 +17,14 @@
 //    Read AUTHORS.txt, LICENSE.txt and COPYRIGHT.txt for more details.
 //=========================================================================
 
-#include "LibGens.h"
 #include <algorithm>
+#include <list>
+
 #include "S06XnFile.h"
 
-namespace LibGens {
+#include "File.hpp"
+
+namespace LibS06 {
 	SonicXNFile::SonicXNFile(XNFileMode file_mode_parameter) {
 		info=NULL;
 		offset_table=NULL;
@@ -40,24 +43,22 @@ namespace LibGens {
 		info->setBigEndian(big_endian);
 
 		offset_table = new SonicXNOffsetTable();
-		offset_table->setHeader(LIBGENS_XNSECTION_HEADER_OFFSET_TABLE);
+		offset_table->setHeader(LIBS06_XNSECTION_HEADER_OFFSET_TABLE);
 		offset_table->setFileMode(file_mode);
 		offset_table->setBigEndian(big_endian);
 
 		footer=new SonicXNFooter();
-		footer->setHeader(LIBGENS_XNSECTION_HEADER_FOOTER);
+		footer->setHeader(LIBS06_XNSECTION_HEADER_FOOTER);
 		footer->setFileMode(file_mode);
 		footer->setBigEndian(big_endian);
 
 		end=new SonicXNEnd();
-		end->setHeader(LIBGENS_XNSECTION_HEADER_END);
+		end->setHeader(LIBS06_XNSECTION_HEADER_END);
 		end->setFileMode(file_mode);
 		end->setBigEndian(big_endian);
 	}
 
-	SonicXNFile::SonicXNFile(string filename, XNFileMode file_mode_parameter) {
-		File file(filename, LIBGENS_FILE_READ_BINARY);
-
+	SonicXNFile::SonicXNFile(std::string filename, XNFileMode file_mode_parameter) {
 		info=NULL;
 		offset_table=NULL;
 		footer=NULL;
@@ -75,37 +76,42 @@ namespace LibGens {
 		
 		std::transform(filename.begin(), filename.end(), filename.begin(), ::tolower);
 		
-		if ((filename.find(LIBGENS_XNO_EXTENSION)      != string::npos) || (filename.find(LIBGENS_XNM_EXTENSION)      != string::npos) || (file_mode_parameter == MODE_XNO)) {
+		if ((filename.find(LIBS06_XNO_EXTENSION)      != std::string::npos) || (filename.find(LIBS06_XNM_EXTENSION)      != std::string::npos) || (file_mode_parameter == MODE_XNO)) {
 			file_mode = MODE_XNO;
 		}
-		else if (filename.find(LIBGENS_ZNO_EXTENSION) != string::npos  || (filename.find(LIBGENS_ZNM_EXTENSION)      != string::npos) || (file_mode_parameter == MODE_ZNO)) {
+		else if (filename.find(LIBS06_ZNO_EXTENSION) != std::string::npos  || (filename.find(LIBS06_ZNM_EXTENSION)      != std::string::npos) || (file_mode_parameter == MODE_ZNO)) {
 			file_mode = MODE_ZNO;
 		}
-		else if (filename.find(LIBGENS_INO_EXTENSION) != string::npos  || (filename.find(LIBGENS_INM_EXTENSION)      != string::npos) || (file_mode_parameter == MODE_INO)) {
+		else if (filename.find(LIBS06_INO_EXTENSION) != std::string::npos  || (filename.find(LIBS06_INM_EXTENSION)      != std::string::npos) || (file_mode_parameter == MODE_INO)) {
 			file_mode = MODE_INO;
 		}
-		else if ((filename.find(LIBGENS_GNO_EXTENSION) != string::npos) || (filename.find(LIBGENS_GNM_EXTENSION) != string::npos) || (filename.find(LIBGENS_GNA_EXTENSION) != string::npos) || (file_mode_parameter == MODE_GNO)) {
+		else if ((filename.find(LIBS06_GNO_EXTENSION) != std::string::npos) || (filename.find(LIBS06_GNM_EXTENSION) != std::string::npos) || (filename.find(LIBS06_GNA_EXTENSION) != std::string::npos) || (file_mode_parameter == MODE_GNO)) {
 			file_mode = MODE_GNO;
 		}
-		else if (filename.find(LIBGENS_ENO_EXTENSION) != string::npos || (file_mode_parameter == MODE_ENO)) {
+		else if (filename.find(LIBS06_ENO_EXTENSION) != std::string::npos || (file_mode_parameter == MODE_ENO)) {
 			file_mode = MODE_ENO;
 		}
 		else if (file_mode_parameter == MODE_YNO) {
 			file_mode = MODE_YNO;
 		}
 
+		// Will set the endianess
 		setHeaders();
 
-		if (file.valid()) {
+		auto endianessOfFile = big_endian ? Endianess::Big : Endianess::Little;
+		
+		File file(filename, File::Style::Read, endianessOfFile);
+
+		if (file.Valid()) {
 			while (!end) {
 				readSection(&file);
 			}
-			file.close();
+			file.Close();
 		}
 
 		SonicXNObject *object=getObject();
 		if (object) {
-			string name="Object";
+			std::string name="Object";
 			if (footer) name=footer->name;
 			object->setNames(name);
 		}
@@ -114,60 +120,60 @@ namespace LibGens {
 	void SonicXNFile::setHeaders() {
 		switch (file_mode) {
 			case MODE_XNO:
-				header_info    = LIBGENS_XNSECTION_HEADER_INFO_XNO;
-				header_texture = LIBGENS_XNSECTION_HEADER_TEXTURE_XNO;
-				header_effect  = LIBGENS_XNSECTION_HEADER_EFFECT_XNO;
-				header_object  = LIBGENS_XNSECTION_HEADER_OBJECT_XNO;
-				header_bones   = LIBGENS_XNSECTION_HEADER_BONES_XNO;
-				header_motion  = LIBGENS_XNSECTION_HEADER_MOTION_XNO;
+				header_info    = LIBS06_XNSECTION_HEADER_INFO_XNO;
+				header_texture = LIBS06_XNSECTION_HEADER_TEXTURE_XNO;
+				header_effect  = LIBS06_XNSECTION_HEADER_EFFECT_XNO;
+				header_object  = LIBS06_XNSECTION_HEADER_OBJECT_XNO;
+				header_bones   = LIBS06_XNSECTION_HEADER_BONES_XNO;
+				header_motion  = LIBS06_XNSECTION_HEADER_MOTION_XNO;
 				break;
 
 			case MODE_ZNO:
-				header_info    = LIBGENS_XNSECTION_HEADER_INFO_ZNO;
-				header_texture = LIBGENS_XNSECTION_HEADER_TEXTURE_ZNO;
-				header_effect  = LIBGENS_XNSECTION_HEADER_EFFECT_ZNO;
-				header_object  = LIBGENS_XNSECTION_HEADER_OBJECT_ZNO;
-				header_bones   = LIBGENS_XNSECTION_HEADER_BONES_ZNO;
-				header_motion  = LIBGENS_XNSECTION_HEADER_MOTION_ZNO;
+				header_info    = LIBS06_XNSECTION_HEADER_INFO_ZNO;
+				header_texture = LIBS06_XNSECTION_HEADER_TEXTURE_ZNO;
+				header_effect  = LIBS06_XNSECTION_HEADER_EFFECT_ZNO;
+				header_object  = LIBS06_XNSECTION_HEADER_OBJECT_ZNO;
+				header_bones   = LIBS06_XNSECTION_HEADER_BONES_ZNO;
+				header_motion  = LIBS06_XNSECTION_HEADER_MOTION_ZNO;
 				break;
 
 			case MODE_INO:
-				header_info    = LIBGENS_XNSECTION_HEADER_INFO_INO;
-				header_texture = LIBGENS_XNSECTION_HEADER_TEXTURE_INO;
-				header_effect  = LIBGENS_XNSECTION_HEADER_EFFECT_INO;
-				header_object  = LIBGENS_XNSECTION_HEADER_OBJECT_INO;
-				header_bones   = LIBGENS_XNSECTION_HEADER_BONES_INO;
-				header_motion  = LIBGENS_XNSECTION_HEADER_MOTION_INO;
+				header_info    = LIBS06_XNSECTION_HEADER_INFO_INO;
+				header_texture = LIBS06_XNSECTION_HEADER_TEXTURE_INO;
+				header_effect  = LIBS06_XNSECTION_HEADER_EFFECT_INO;
+				header_object  = LIBS06_XNSECTION_HEADER_OBJECT_INO;
+				header_bones   = LIBS06_XNSECTION_HEADER_BONES_INO;
+				header_motion  = LIBS06_XNSECTION_HEADER_MOTION_INO;
 				break;
 
 			case MODE_GNO:
 				big_endian = true;
-				header_info    = LIBGENS_XNSECTION_HEADER_INFO_GNO;
-				header_texture = LIBGENS_XNSECTION_HEADER_TEXTURE_GNO;
-				header_effect  = LIBGENS_XNSECTION_HEADER_EFFECT_GNO;
-				header_object  = LIBGENS_XNSECTION_HEADER_OBJECT_GNO;
-				header_bones   = LIBGENS_XNSECTION_HEADER_BONES_GNO;
-				header_motion  = LIBGENS_XNSECTION_HEADER_MOTION_GNO;
+				header_info    = LIBS06_XNSECTION_HEADER_INFO_GNO;
+				header_texture = LIBS06_XNSECTION_HEADER_TEXTURE_GNO;
+				header_effect  = LIBS06_XNSECTION_HEADER_EFFECT_GNO;
+				header_object  = LIBS06_XNSECTION_HEADER_OBJECT_GNO;
+				header_bones   = LIBS06_XNSECTION_HEADER_BONES_GNO;
+				header_motion  = LIBS06_XNSECTION_HEADER_MOTION_GNO;
 				break;
 
 			case MODE_ENO:
 				big_endian = true;
-				header_info    = LIBGENS_XNSECTION_HEADER_INFO_ENO;
-				header_texture = LIBGENS_XNSECTION_HEADER_TEXTURE_ENO;
-				header_effect  = LIBGENS_XNSECTION_HEADER_EFFECT_ENO;
-				header_object  = LIBGENS_XNSECTION_HEADER_OBJECT_ENO;
-				header_bones   = LIBGENS_XNSECTION_HEADER_BONES_ENO;
-				header_motion  = LIBGENS_XNSECTION_HEADER_MOTION_ENO;
+				header_info    = LIBS06_XNSECTION_HEADER_INFO_ENO;
+				header_texture = LIBS06_XNSECTION_HEADER_TEXTURE_ENO;
+				header_effect  = LIBS06_XNSECTION_HEADER_EFFECT_ENO;
+				header_object  = LIBS06_XNSECTION_HEADER_OBJECT_ENO;
+				header_bones   = LIBS06_XNSECTION_HEADER_BONES_ENO;
+				header_motion  = LIBS06_XNSECTION_HEADER_MOTION_ENO;
 				break;
 
 			case MODE_YNO:
 				big_endian = true;
-				header_info    = LIBGENS_XNSECTION_HEADER_INFO_YNO;
-				header_texture = LIBGENS_XNSECTION_HEADER_TEXTURE_XNO;
-				header_effect  = LIBGENS_XNSECTION_HEADER_EFFECT_XNO;
-				header_object  = LIBGENS_XNSECTION_HEADER_OBJECT_XNO;
-				header_bones   = LIBGENS_XNSECTION_HEADER_BONES_XNO;
-				header_motion  = LIBGENS_XNSECTION_HEADER_MOTION_XNO;
+				header_info    = LIBS06_XNSECTION_HEADER_INFO_YNO;
+				header_texture = LIBS06_XNSECTION_HEADER_TEXTURE_XNO;
+				header_effect  = LIBS06_XNSECTION_HEADER_EFFECT_XNO;
+				header_object  = LIBS06_XNSECTION_HEADER_OBJECT_XNO;
+				header_bones   = LIBS06_XNSECTION_HEADER_BONES_XNO;
+				header_motion  = LIBS06_XNSECTION_HEADER_MOTION_XNO;
 				break;
 		}
 	}
@@ -175,98 +181,94 @@ namespace LibGens {
 
 	void SonicXNSection::read(File *file) {
 		if (!file) {
-			Error::addMessage(Error::NULL_REFERENCE, LIBGENS_S06_XNINFO_ERROR_MESSAGE_NULL_FILE);
+			Error::AddMessage(Error::LogType::NULL_REFERENCE, LIBS06_XNINFO_ERROR_MESSAGE_NULL_FILE);
 			return;
 		}
 		
-		head_address = file->getCurrentAddress()-4;
-		file->readInt32(&section_size);
+		head_address = file->GetCurrentAddress()-4;
+		section_size = file->Read<u32>(Endianess::Big);
 	}
 
 	void SonicXNSection::write(File *file) {
 		if (!file) {
-			Error::addMessage(Error::NULL_REFERENCE, LIBGENS_S06_XNINFO_ERROR_MESSAGE_NULL_FILE);
+			Error::AddMessage(Error::LogType::NULL_REFERENCE, LIBS06_XNINFO_ERROR_MESSAGE_NULL_FILE);
 			return;
 		}
 		
-		head_address = file->getCurrentAddress();
-		file->write((void *) header.c_str(), 4);
-		file->writeNull(4);
+		head_address = file->GetCurrentAddress();
+		file->WriteStream((void*)header.c_str(), 4);
+		file->WriteByte(0, 4);
 
 		writeBody(file);
 
-		file->fixPadding(LIBGENS_XNSECTION_PADDING);
-		size_t bookmark=file->getCurrentAddress();
+		file->FixPadding(LIBS06_XNSECTION_PADDING);
+		size_t bookmark=file->GetCurrentAddress();
 
 		
-		section_size = bookmark - head_address - LIBGENS_XNSECTION_HEADER_SIZE;
-		file->goToAddress(head_address + 4);
-		file->writeInt32(&section_size);
+		section_size = bookmark - head_address - LIBS06_XNSECTION_HEADER_SIZE;
+		file->SetAddress(head_address + 4);
+		file->Write<u32>(section_size, Endianess::Big);
 
-
-		file->goToAddress(bookmark);
+		file->SetAddress(bookmark);
 	}
 
 
 	void SonicXNSection::goToEnd(File *file) {
-		file->goToAddress(head_address + section_size + 8);
+		file->SetAddress(head_address + section_size + 8);
 	}
 
 
 	void SonicXNInfo::read(File *file) {
 		SonicXNSection::read(file);
 
-		unsigned int file_root_address=0;
-		file->readInt32E(&section_count, big_endian);
-		file->readInt32E(&file_root_address, big_endian);
-		file->setRootNodeAddress(file_root_address);
+		section_count = file->Read<u32>();
+		unsigned int file_root_address = file->ReadAddressFileEndianess();
+		file->SetRootNodeAddress(file_root_address);
 	}
 
 	void SonicXNInfo::writeBody(File *file) {
-		file->writeInt32(&section_count);
+		file->Write<u32>(section_count, Endianess::Big);
 		unsigned int root_address=32;
-		file->writeInt32(&root_address);
-		file->writeNull(12);
+		file->Write<u32>(root_address, Endianess::Big);
+		file->WriteByte(0, 12);
 
 		unsigned int unknown_value=1;
-		file->writeInt32(&unknown_value);
+		file->Write<u32>(unknown_value, Endianess::Big);
 	}
 
 
 	void SonicXNInfo::writeFixed(File *file) {
-		size_t address=file->getCurrentAddress();
+		size_t address=file->GetCurrentAddress();
 
-		file->goToAddress(head_address + 16);
-		file->writeInt32A(&offset_table_address);
-		file->writeInt32(&offset_table_address_raw);
-		file->writeInt32(&offset_table_size);
+		file->SetAddress(head_address + 16);
+		file->WriteAddress(offset_table_address, Endianess::Big);
+		file->Write<u32>(offset_table_address_raw, Endianess::Big);
+		file->Write<u32>(offset_table_size, Endianess::Big);
 
-		file->goToAddress(address);
+		file->SetAddress(address);
 	}
 
 
 	void SonicXNOffsetTable::read(File *file) {
 		SonicXNSection::read(file);
 
-		unsigned int offset_count=0;
-		file->readInt32E(&offset_count, big_endian);
-		file->moveAddress(4);
+		unsigned int offset_count = file->Read<u32>();
+		file->OffsetAddress(4);
 
 		for (size_t i=0; i<offset_count; i++) {
-			size_t address=0;
-			file->readInt32E(&address, big_endian);
+			size_t address = file->Read<u32>();
 			addresses.push_back(address);
 		}
 	}
 
 	void SonicXNOffsetTable::writeBody(File *file) {
 		unsigned int offset_count=addresses.size();
-		file->writeInt32(&offset_count);
-		file->writeNull(4);
+		file->Write<u32>(offset_count);
+		file->WriteByte(0, 4);
 
 		for (size_t i=0; i<offset_count; i++) {
 			size_t address=addresses[i];
-			file->writeInt32(&address);
+			file->Write<u32>(address);
 		}
 	}
 
@@ -274,19 +276,18 @@ namespace LibGens {
 	void SonicXNFooter::read(File *file) {
 		SonicXNSection::read(file);
 
-		file->moveAddress(8);
-		file->readString(&name);
+		file->OffsetAddress(8);
+		name = file->ReadNullTerminatedString();
 	}
 
 	void SonicXNFooter::writeBody(File *file) {
-		file->writeNull(8);
-		file->writeString(&name);
+		file->WriteByte(0, 8);
+		file->WriteNullTerminatedString(name.c_str());
 	}
 
 
 	SonicXNSection *SonicXNFile::readSection(File *file) {
-		string identifier="";
-		file->readString(&identifier, 4);
+		std::string identifier = file->ReadString(4);
 
 		if (identifier == header_info) {
 			info = new SonicXNInfo();
@@ -304,9 +305,9 @@ namespace LibGens {
 				}
 			}
 		}
-		else if (identifier == LIBGENS_XNSECTION_HEADER_OFFSET_TABLE) {
+		else if (identifier == LIBS06_XNSECTION_HEADER_OFFSET_TABLE) {
 			offset_table = new SonicXNOffsetTable();
-			offset_table->setHeader(LIBGENS_XNSECTION_HEADER_OFFSET_TABLE);
+			offset_table->setHeader(LIBS06_XNSECTION_HEADER_OFFSET_TABLE);
 			offset_table->setFileMode(file_mode);
 			offset_table->setBigEndian(big_endian);
 			offset_table->read(file);
@@ -353,18 +354,18 @@ namespace LibGens {
 			section->read(file);
 			return section;
 		}
-		else if (identifier == LIBGENS_XNSECTION_HEADER_FOOTER) {
+		else if (identifier == LIBS06_XNSECTION_HEADER_FOOTER) {
 			footer=new SonicXNFooter();
-			footer->setHeader(LIBGENS_XNSECTION_HEADER_FOOTER);
+			footer->setHeader(LIBS06_XNSECTION_HEADER_FOOTER);
 			footer->setFileMode(file_mode);
 			footer->setBigEndian(big_endian);
 			footer->read(file);
 			footer->goToEnd(file);
 			return footer;
 		}
-		else if (identifier == LIBGENS_XNSECTION_HEADER_END) {
+		else if (identifier == LIBS06_XNSECTION_HEADER_END) {
 			end=new SonicXNEnd();
-			end->setHeader(LIBGENS_XNSECTION_HEADER_END);
+			end->setHeader(LIBS06_XNSECTION_HEADER_END);
 			end->setFileMode(file_mode);
 			end->setBigEndian(big_endian);
 			end->read(file);
@@ -376,21 +377,36 @@ namespace LibGens {
 	}
 
 	
-	void SonicXNFile::save(string filename) {
-		File file(filename, LIBGENS_FILE_WRITE_BINARY);
+	void SonicXNFile::save(std::string filename) {
+		Endianess endianessOfFile;
+		
+		if ((filename.find(LIBS06_XNO_EXTENSION) != std::string::npos) || 
+				(filename.find(LIBS06_XNM_EXTENSION) != std::string::npos) ||
+				(filename.find(LIBS06_ZNO_EXTENSION) != std::string::npos) || 
+				(filename.find(LIBS06_ZNM_EXTENSION) != std::string::npos) ||
+				(filename.find(LIBS06_INO_EXTENSION) != std::string::npos) || 
+				(filename.find(LIBS06_INM_EXTENSION) != std::string::npos))
+			endianessOfFile = Endianess::Little;
+		else if ((filename.find(LIBS06_GNO_EXTENSION) != std::string::npos) || 
+						 (filename.find(LIBS06_GNM_EXTENSION) != std::string::npos) || 
+						 (filename.find(LIBS06_GNA_EXTENSION) != std::string::npos) ||
+						 (filename.find(LIBS06_ENO_EXTENSION) != std::string::npos))
+			endianessOfFile = Endianess::Big;
 
-		if (file.valid()) {
+		File file(filename, File::Style::Write, endianessOfFile);
+
+		if (file.Valid()) {
 			write(&file);
-			file.close();
+			file.Close();
 		}
 	}
 
 	void SonicXNFile::write(File *file) {
 		if (!file) {
-			Error::addMessage(Error::NULL_REFERENCE, LIBGENS_S06_XNINFO_ERROR_MESSAGE_WRITE_NULL_FILE);
+			Error::AddMessage(Error::LogType::NULL_REFERENCE, LIBS06_XNINFO_ERROR_MESSAGE_WRITE_NULL_FILE);
 			return;
 		}
-		file->setRootNodeAddress(32);
+		file->SetRootNodeAddress(32);
 
 		if (info) {
 			info->setSectionCount(sections.size());
@@ -404,9 +420,9 @@ namespace LibGens {
 		if (offset_table) {
 			offset_table->clear();
 			
-			file->sortAddressTable();
-			list<size_t> table=file->getAddressTable();
-			for (list<size_t>::iterator it=table.begin(); it!=table.end(); it++) {
+			file->SortAddressTable();
+			std::list<size_t> table = file->GetAddressTable();
+			for (std::list<size_t>::iterator it=table.begin(); it!=table.end(); it++) {
 				offset_table->push(*it);
 			}
 

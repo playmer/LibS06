@@ -17,10 +17,13 @@
 //    Read AUTHORS.txt, LICENSE.txt and COPYRIGHT.txt for more details.
 //=========================================================================
 
-#include "LibGens.h"
 #include "S06XnFile.h"
 
-namespace LibGens {
+#include "tri_stripper.h"
+
+namespace LibS06 {
+
+/*
 	const unsigned char xno_constant_floats[80] = { 
 										   0x00 ,0x00 ,0x80 ,0x3F ,0x00 ,0x00 ,0x80 ,0x3F ,0x00 ,0x00 ,0x80 ,0x3F ,0x00 ,0x00 ,0x80 ,0x3F 
 										  ,0x00 ,0x00 ,0x80 ,0x3F ,0x00 ,0x00 ,0x80 ,0x3F ,0x00 ,0x00 ,0x80 ,0x3F ,0x00 ,0x00 ,0x80 ,0x3F 
@@ -121,8 +124,8 @@ namespace LibGens {
 
 		// Set up Object
 		unsigned int sonic_material_index = material_index;
-		vector<SonicVertex *> new_vertices;
-		vector<unsigned int> new_indices;
+		std::vector<SonicVertex *> new_vertices;
+		std::vector<unsigned int> new_indices;
 
 		// Scan FBX Mesh for vertices on the current material index
 		int lPolygonCount=lMesh->GetPolygonCount();
@@ -160,7 +163,7 @@ namespace LibGens {
 
 				int polygon_size=lMesh->GetPolygonSize(lPolygonIndex);
 				if (polygon_size == 3) {
-					Vector3 face;
+					glm::vec3 face;
 
 					for (int j=0; j<polygon_size; j++) {
 						int control_point_index=lMesh->GetPolygonVertex(lPolygonIndex, j);
@@ -173,8 +176,8 @@ namespace LibGens {
 						// Create Vertex
 						SonicVertex *v=new SonicVertex();
 						v->zero();
-						v->position = Vector3(control_point[0], control_point[2], -control_point[1]);
-						v->normal   = Vector3(normal[0], normal[2], -normal[1]);
+						v->position = glm::vec3(control_point[0], control_point[2], -control_point[1]);
+						v->normal   = glm::vec3(normal[0], normal[2], -normal[1]);
 
 						// Add to AABB
 						object->aabb.addPoint(v->position);
@@ -184,10 +187,10 @@ namespace LibGens {
 
 						for (int set=0; set<uv_sets.GetCount(); set++) {
 							if (set >= 4) break;
-							FbxVector2 uv;
+							Fbxglm::vec2 uv;
 							bool no_uv;
 							lMesh->GetPolygonVertexUV(lPolygonIndex, j, uv_sets[set].Buffer(), uv, no_uv);
-							v->uv[set] = Vector2(uv[0], 1.0-uv[1]);
+							v->uv[set] = glm::vec2(uv[0], 1.0-uv[1]);
 						}
 
 						for (size_t c=0; c<vertex_color_count; c++) {
@@ -217,8 +220,8 @@ namespace LibGens {
 						}
 						
 						// Calculate Tangent and Binormal
-						Vector3 c1 = v->normal.crossProduct(Vector3(0.0, 0.0, 1.0));
-						Vector3 c2 = v->normal.crossProduct(Vector3(0.0, 1.0, 0.0));
+						glm::vec3 c1 = v->normal.crossProduct(glm::vec3(0.0, 0.0, 1.0));
+						glm::vec3 c2 = v->normal.crossProduct(glm::vec3(0.0, 1.0, 0.0));
 						if(c1.length() > c2.length()) v->tangent = c1;
 						else v->tangent = c2;
 						v->tangent.normalise();
@@ -246,8 +249,8 @@ namespace LibGens {
 		}
 		
 
-		vector< vector<SonicVertex *> > vertices_output;
-		vector< vector<unsigned int> > indices_output;
+		std::vector<SonicVertex *> vertices_output;
+		std::vector<unsigned int> indices_output;
 		unsigned int max_skinning_bones=32;
 		// Temporary Workaround for submesh splitting, just add existing tables
 		vertices_output.push_back(new_vertices);
@@ -260,16 +263,16 @@ namespace LibGens {
 				FbxSurfaceMaterial *lMaterial=lNode->GetMaterial(material_index);
 
 				if (lMaterial) {
-					string material_name = ToString(lMaterial->GetName());
+					std::string material_name = ToString(lMaterial->GetName());
 
-					string shader_name = "Billboard03.fx";
-					string sub_shader_name = "Billboard03";
+					std::string shader_name = "Billboard03.fx";
+					std::string sub_shader_name = "Billboard03";
 
 					size_t shader_name_pos = material_name.find_first_of("@");
 					size_t sub_shader_name_pos = material_name.find_last_of("@");
 
 					// One @ Symbol was found at least
-					if (shader_name_pos != string::npos) {
+					if (shader_name_pos != std::string::npos) {
 						shader_name_pos += 1;
 						sub_shader_name_pos += 1;
 
@@ -360,11 +363,11 @@ namespace LibGens {
 		if (lTextureCount) {
 			const FbxFileTexture* lTexture = lProperty->GetSrcObject<FbxFileTexture>();
 			if (lTexture) {
-				string texture_name = File::nameFromFilename(ToString(lTexture->GetFileName()));
+				std::string texture_name = File::nameFromFilename(ToString(lTexture->GetFileName()));
 
 				size_t pos=texture_name.find(".png");
-				if (pos == string::npos) pos=texture_name.find(".PNG");
-				if (pos != string::npos) {
+				if (pos == std::string::npos) pos=texture_name.find(".PNG");
+				if (pos != std::string::npos) {
 					texture_name.replace(pos, 4, ".dds");
 				}
 
@@ -425,6 +428,6 @@ namespace LibGens {
 			object->material_tables.push_back(sonic_material_table);
 		}
 	}
-
+	*/
 	// FIXME: Add to mesh the used texture units in the extras
 }

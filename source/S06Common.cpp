@@ -17,17 +17,21 @@
 //    Read AUTHORS.txt, LICENSE.txt and COPYRIGHT.txt for more details.
 //=========================================================================
 
-#include "LibGens.h"
-#include "S06Common.h"
+#include <string>
 
-namespace LibGens {
-	void SonicStringTable::writeString(File *file, string str) {
-		file->writeNull(4);
+#include "S06Common.h"
+#include "S06XnFile.h"
+
+#include "File.hpp"
+
+namespace LibS06 {
+	void SonicStringTable::writeString(File *file, std::string str) {
+		file->WriteByte(0, 4);
 
 		if (!str.size()) {
 			SonicString new_string;
 			new_string.addresses.clear();
-			new_string.addresses.push_back(file->getCurrentAddress()-4);
+			new_string.addresses.push_back(file->GetCurrentAddress()-4);
 			new_string.value = "";
 			strings.insert(strings.begin()+null_string_count, new_string);
 			null_string_count++;
@@ -36,32 +40,32 @@ namespace LibGens {
 
 		for (size_t i=0; i<strings.size(); i++) {
 			if (strings[i].value == str) {
-				strings[i].addresses.push_back(file->getCurrentAddress()-4);
+				strings[i].addresses.push_back(file->GetCurrentAddress()-4);
 				return;
 			}
 		}
 
 		SonicString new_string;
 		new_string.addresses.clear();
-		new_string.addresses.push_back(file->getCurrentAddress()-4);
+		new_string.addresses.push_back(file->GetCurrentAddress()-4);
 		new_string.value = str;
 		strings.push_back(new_string);
 	}
 
 	void SonicStringTable::write(File *file) {
 		for (size_t i=0; i<strings.size(); i++) {
-			size_t address=file->getCurrentAddress();
-			if (strings[i].value.size()) file->writeString(&strings[i].value);
+			size_t address=file->GetCurrentAddress();
+			if (strings[i].value.size()) file->WriteNullTerminatedString(strings[i].value.c_str());
 			else {
-				file->writeNull(4);
+				file->WriteByte(0, 4);
 			}
 
 			for (size_t j=0; j<strings[i].addresses.size(); j++) {
-				file->goToAddress(strings[i].addresses[j]);
-				file->writeInt32BEA(&address);
+				file->SetAddress(strings[i].addresses[j]);
+				file->WriteAddress(address, Endianess::Big);
 			}
 
-			file->goToEnd();
+			file->GoToEnd();
 		}
 	}
 
@@ -69,7 +73,7 @@ namespace LibGens {
 		SonicOffsetTableEntry entry(c, of);
 
 		bool found=false;
-		for (list<SonicOffsetTableEntry>::iterator it=entries.begin(); it!=entries.end(); it++) {
+		for (std::list<SonicOffsetTableEntry>::iterator it=entries.begin(); it!=entries.end(); it++) {
 			if (entry.offset <= (*it).offset) {
 				entries.insert(it, entry);
 				found = true;
@@ -83,28 +87,28 @@ namespace LibGens {
 
 	void SonicOffsetTable::printList() {
 		size_t index=0;
-		for (list<SonicOffsetTableEntry>::iterator it=entries.begin(); it!=entries.end(); it++) {
-			Error::addMessage(Error::WARNING, ToString((*it).code) + "  (" + ToString((*it).offset) + ") " + ToString(index));
+		for (std::list<SonicOffsetTableEntry>::iterator it=entries.begin(); it!=entries.end(); it++) {
+			Error::AddMessage(Error::LogType::WARNING, std::to_string((*it).code) + "  (" + std::to_string((*it).offset) + ") " + std::to_string(index));
 			index++;
 		}
 
-		Error::addMessage(Error::WARNING, "Done");
+		Error::AddMessage(Error::LogType::WARNING, "Done");
 	}
 
 	void SonicOffsetTableEntry::write(File *file) {
-		file->writeUChar(&code);
+		file->Write<u8>(code);
 	}
 
 	void SonicOffsetTable::write(File *file) {
-		for (list<SonicOffsetTableEntry>::iterator it=entries.begin(); it!=entries.end(); it++) {
+		for (std::list<SonicOffsetTableEntry>::iterator it=entries.begin(); it!=entries.end(); it++) {
 			(*it).write(file);
 		}
 
-		file->fixPadding();
+		file->FixPadding(4);
 	}
 
 	void SonicOffsetTable::writeSize(File *file) {
 		unsigned int total_entries=entries.size();
-		file->writeInt32BE(&total_entries);
+		file->Write<u32>(total_entries, Endianess::Big);
 	}
 }

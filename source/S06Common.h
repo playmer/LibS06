@@ -19,23 +19,29 @@
 
 #pragma once
 
-namespace LibGens {
+#include <list>
+#include <string>
+#include <vector>
+
+namespace LibS06 {
+	class File;
+
 	class SonicString {
 		public:
-			vector<size_t> addresses;
-			string value;
+			std::vector<size_t> addresses;
+			std::string value;
 	};
 
 	class SonicStringTable {
 		protected:
-			vector<SonicString> strings;
+			std::vector<SonicString> strings;
 			size_t null_string_count;
 		public:
 			SonicStringTable() {
 				null_string_count = 0;
 			}
 
-			void writeString(File *file, string str);
+			void writeString(File *file, std::string str);
 			void write(File *file);
 
 			void clear() {
@@ -59,7 +65,7 @@ namespace LibGens {
 
 	class SonicOffsetTable {
 		protected:
-			list<SonicOffsetTableEntry> entries;
+			std::list<SonicOffsetTableEntry> entries;
 		public:
 			SonicOffsetTable() {
 			}

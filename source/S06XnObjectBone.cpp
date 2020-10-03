@@ -17,66 +17,210 @@
 //    Read AUTHORS.txt, LICENSE.txt and COPYRIGHT.txt for more details.
 //=========================================================================
 
-#include "LibGens.h"
 #include <algorithm>
 #include "S06XnFile.h"
 
-namespace LibGens {
+
+namespace LibS06 {
+	enum class RotationOrder
+	{
+		XYZ,
+		ZXY,
+		XZY,
+		XYZ,
+	};
+
+	RotationOrder GetRotationOrder(unsigned int aFlag)
+	{
+		unsigned int rotation_flag = aFlag & 3840u;
+		if (rotation_flag != 0u) 
+		{
+			if (rotation_flag != 256u) 
+			{
+				if (rotation_flag != 1024u)
+				{
+					return RotationOrder::XYZ;
+				}
+				else
+				{
+					return RotationOrder::ZXY;
+				}
+			}
+			else
+			{
+				return RotationOrder::XZY;
+			}
+		}
+		else
+		{
+			return RotationOrder::XYZ;
+		}
+	}
+	
+  glm::mat3 fromEulerAnglesZYX(const float& fYAngle, const float& fPAngle, const float& fRAngle) {
+      float fCos, fSin;
+
+      fCos = glm::cos(fYAngle);
+      fSin = glm::sin(fYAngle);
+      glm::mat3 kZMat(fCos,-fSin,0.0,fSin,fCos,0.0,0.0,0.0,1.0);
+
+      fCos = glm::cos(fPAngle);
+      fSin = glm::sin(fPAngle);
+      glm::mat3 kYMat(fCos,0.0,fSin,0.0,1.0,0.0,-fSin,0.0,fCos);
+
+      fCos = glm::cos(fRAngle);
+      fSin = glm::sin(fRAngle);
+      glm::mat3 kXMat(1.0,0.0,0.0,0.0,fCos,-fSin,0.0,fSin,fCos);
+
+      return kZMat*(kYMat*kXMat);
+  }
+
+	
+  glm::mat3 fromEulerAnglesYXZ(const float& fYAngle, const float& fPAngle, const float& fRAngle) {
+      float fCos, fSin;
+
+      fCos = glm::cos(fYAngle);
+      fSin = glm::sin(fYAngle);
+      glm::mat3 kZMat(fCos,-fSin,0.0,fSin,fCos,0.0,0.0,0.0,1.0);
+
+      fCos = glm::cos(fPAngle);
+      fSin = glm::sin(fPAngle);
+      glm::mat3 kYMat(fCos,0.0,fSin,0.0,1.0,0.0,-fSin,0.0,fCos);
+
+      fCos = glm::cos(fRAngle);
+      fSin = glm::sin(fRAngle);
+      glm::mat3 kXMat(1.0,0.0,0.0,0.0,fCos,-fSin,0.0,fSin,fCos);
+
+      return kYMat*(kXMat*kZMat);
+  }
+
+	
+  glm::mat3 fromEulerAnglesYZX(const float& fYAngle, const float& fPAngle, const float& fRAngle) {
+      float fCos, fSin;
+
+      fCos = glm::cos(fYAngle);
+      fSin = glm::sin(fYAngle);
+      glm::mat3 kZMat(fCos,-fSin,0.0,fSin,fCos,0.0,0.0,0.0,1.0);
+
+      fCos = glm::cos(fPAngle);
+      fSin = glm::sin(fPAngle);
+      glm::mat3 kYMat(fCos,0.0,fSin,0.0,1.0,0.0,-fSin,0.0,fCos);
+
+      fCos = glm::cos(fRAngle);
+      fSin = glm::sin(fRAngle);
+      glm::mat3 kXMat(1.0,0.0,0.0,0.0,fCos,-fSin,0.0,fSin,fCos);
+
+      return kYMat*(kZMat*kXMat);
+  }
+
+
+	glm::quat fromXYZInts(int rx, int ry, int rz) {
+		float rot_x = rx * MathConstants::i32ToRadian;
+		float rot_y = ry * MathConstants::i32ToRadian;
+		float rot_z = rz * MathConstants::i32ToRadian;
+
+		glm::mat3 mr = fromEulerAnglesZYX(rot_z, rot_y, rot_x);
+		return glm::quat_cast(mr);
+	}
+
+	glm::quat fromXZYInts(int rx, int ry, int rz) {
+		float rot_x = rx * MathConstants::i32ToRadian;
+		float rot_y = ry * MathConstants::i32ToRadian;
+		float rot_z = rz * MathConstants::i32ToRadian;
+
+		glm::mat3 mr = fromEulerAnglesYZX(rot_z, rot_y, rot_x);
+		return glm::quat_cast(mr);
+	}
+
+	glm::quat fromZXYInts(int rx, int ry, int rz) {
+		float rot_x = rx * MathConstants::i32ToRadian;
+		float rot_y = ry * MathConstants::i32ToRadian;
+		float rot_z = rz * MathConstants::i32ToRadian;
+
+		glm::mat3 mr = fromEulerAnglesYXZ(rot_z, rot_y, rot_x);
+		return glm::quat_cast(mr);
+	}
+	
+	glm::quat ReadRotation(File* aFile, unsigned int aFlag)
+	{
+		auto rotationOrder = GetRotationOrder(aFlag);
+		auto rX = aFile->Read<i32>();
+		auto rY = aFile->Read<i32>();
+		auto rZ = aFile->Read<i32>();
+
+		switch (rotationOrder)
+		{
+			case RotationOrder::XYZ: return fromXYZInts(rX, rY, rZ);
+			case RotationOrder::XZY: return fromXZYInts(rX, rY, rZ);
+			case RotationOrder::ZXY: return fromZXYInts(rX, rY, rZ);
+			default: 
+				Error::AddMessage(Error::LogType::ERROR, "Invalid rotation order passed to ReadRotation");
+				return; // AddMessage will throw, but we need a return here for the compiler.
+		}
+	}
+	
+
+	void WriteRotation(File* aFile, unsigned int aFlag, glm::vec3& aRotation)
+	{
+		auto rotationOrder = GetRotationOrder(aFlag);
+	}
+
+
 	void SonicBone::read(File *file, bool big_endian, XNFileMode file_mode) {
-		file->readInt32E(&flag, big_endian);
-		file->readInt16E(&matrix_index, big_endian);
-		file->readInt16E(&parent_index, big_endian);
-		file->readInt16E(&child_index, big_endian);
-		file->readInt16E(&sibling_index, big_endian);
-		translation.read(file, big_endian);
-		file->readInt32E(&rotation_x, big_endian);
-		file->readInt32E(&rotation_y, big_endian);
-		file->readInt32E(&rotation_z, big_endian);
-		scale.read(file, big_endian);
-		matrix.read(file, big_endian);
+		flag = file->Read<u32>();
+		matrix_index= file->Read<u16>();
+		parent_index = file->Read<u16>();
+		child_index = file->Read<u16>();
+		sibling_index = file->Read<u16>();
+		translation = file->Read<glm::vec3>();
+		orientation = ReadRotation(file, flag);
+		scale = file->Read<glm::vec3>();
+		matrix = file->Read<glm::mat4>();
 
 		if (file_mode == MODE_GNO) {
-			matrix = matrix.transpose();
+			matrix = glm::transpose(matrix);
 			matrix[3][3] = 1.0;
 		}
 
-		center.read(file, big_endian);
-		file->readFloat32E(&radius, big_endian);
+		center = file->Read<glm::vec3>();
+		radius = file->Read<u32>();
 
 		if (file_mode != MODE_GNO) {
-			file->readInt32E(&user, big_endian);
-			bounding_box.read(file, big_endian);
+			user = file->Read<u32>();
+			bounding_box = file->Read<glm::vec3>();
 		}
 		
-		unsigned int rotation_flag=flag & 3840u;
-		if (rotation_flag != 0u) {
-			if (rotation_flag != 256u) {
-				if (rotation_flag != 1024u) orientation.fromXYZInts(rotation_x, rotation_y, rotation_z);
-				else orientation.fromZXYInts(rotation_x, rotation_y, rotation_z);
-			}
-			else orientation.fromXZYInts(rotation_x, rotation_y, rotation_z);
-		}
-		else orientation.fromXYZInts(rotation_x, rotation_y, rotation_z);
-		
-		current_matrix.makeTransform(translation, scale, orientation);
+		//unsigned int rotation_flag=flag & 3840u;
+		//if (rotation_flag != 0u) 
+		//{
+		//	if (rotation_flag != 256u) 
+		//	{
+		//		if (rotation_flag != 1024u) 
+		//			orientation.fromXYZInts(rotation_x, rotation_y, rotation_z);
+		//		else 
+		//			orientation.fromZXYInts(rotation_x, rotation_y, rotation_z);
+		//	}
+		//	else orientation.fromXZYInts(rotation_x, rotation_y, rotation_z);
+		//}
+		//else orientation.fromXYZInts(rotation_x, rotation_y, rotation_z);
 	}
 
 	void SonicBone::write(File *file) {
-		file->writeInt32(&flag);
-		file->writeInt16(&matrix_index);
-		file->writeInt16(&parent_index);
-		file->writeInt16(&child_index);
-		file->writeInt16(&sibling_index);
-		translation.write(file, false);
-		file->writeInt32(&rotation_x);
-		file->writeInt32(&rotation_y);
-		file->writeInt32(&rotation_z);
-		scale.write(file, false);
-		matrix.write(file, false);
-		center.write(file, false);
-		file->writeFloat32(&radius);
-		file->writeInt32(&user);
-		bounding_box.write(file, false);
+		file->Write<u32>(flag);
+		file->Write<u16>(matrix_index);
+		file->Write<u16>(parent_index);
+		file->Write<u16>(child_index);
+		file->Write<u16>(sibling_index);
+		file->Write<glm::vec3>(translation);
+		file->Write<u32>(rotation_x);
+		file->Write<u32>(rotation_y);
+		file->Write<u32>(rotation_z);
+		file->Write<glm::vec3>(scale);
+		file->Write<glm::mat4>(matrix);
+		file->Write<glm::vec3>(center);
+		file->Write<f32>(radius);
+		file->Write<u32>(user);
+		file->Write<glm::vec3>(bounding_box);
 	}
 
 
@@ -86,26 +230,26 @@ namespace LibGens {
 		radius = radius * sca;
 		scale_animation_mod *= sca;
 
-		Quaternion orientation;
-		unsigned int rotation_flag=flag & 3840u;
-		if (rotation_flag != 0u) {
-			if (rotation_flag != 256u) {
-				if (rotation_flag != 1024u) orientation.fromXYZInts(rotation_x, rotation_y, rotation_z);
-				else orientation.fromZXYInts(rotation_x, rotation_y, rotation_z);
-			}
-			else orientation.fromXZYInts(rotation_x, rotation_y, rotation_z);
-		}
-		else orientation.fromXYZInts(rotation_x, rotation_y, rotation_z);
-		current_matrix.makeTransform(translation, scale, orientation);
+		//glm::quat orientation;
+		//unsigned int rotation_flag=flag & 3840u;
+		//if (rotation_flag != 0u) {
+		//	if (rotation_flag != 256u) {
+		//		if (rotation_flag != 1024u) orientation.fromXYZInts(rotation_x, rotation_y, rotation_z);
+		//		else orientation.fromZXYInts(rotation_x, rotation_y, rotation_z);
+		//	}
+		//	else orientation.fromXZYInts(rotation_x, rotation_y, rotation_z);
+		//}
+		//else orientation.fromXYZInts(rotation_x, rotation_y, rotation_z);
+		//current_matrix.makeTransform(translation, scale, orientation);
 	}
 
 	void SonicBone::zero() {
 		flag = 0x2001C6;
-		translation = Vector3();
+		translation = glm::vec3();
 		rotation_x = 0;
 		rotation_y = 0;
 		rotation_z = 0;
-		scale = Vector3(1.0f, 1.0f, 1.0f);
+		scale = glm::vec3(1.0f, 1.0f, 1.0f);
 		parent_index = 0xFF;
 		matrix_index = 0;
 
