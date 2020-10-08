@@ -274,7 +274,7 @@ namespace LibS06
       std::string value;
       auto character = Read<char>();
 
-      while ('\n' != character)
+      while ('\0' != character)
       {
         value += character;
         character = Read<char>();
