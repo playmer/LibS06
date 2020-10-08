@@ -41,12 +41,12 @@ namespace LibS06 {
 
 		printf("Found submesh with:\n Position: %f %f %f Radius: %f\n Node Index: %d Matrix Index: %d Material Index: %d Vertex Index: %d\n Indices Index: %d Indices Index 2: %d\n", center.x, center.y, center.z, radius, node_index, matrix_index, material_index, vertex_index, indices_index, indices_index_2);
 
-		Error::AddMessage(Error::LogType::WARNING, "Submesh:");
-		Error::AddMessage(Error::LogType::WARNING, "  Node Index:     " + ToString(node_index));
-		Error::AddMessage(Error::LogType::WARNING, "  Matrix Index:   " + ToString(matrix_index));
-		Error::AddMessage(Error::LogType::WARNING, "  Material Index: " + ToString(material_index));
-		Error::AddMessage(Error::LogType::WARNING, "  Vertex Index:   " + ToString(vertex_index));
-		Error::AddMessage(Error::LogType::WARNING, "  Indices Index:  " + ToString(indices_index));
+		Error::AddMessage(Error::LogType::LOG, "Submesh:");
+		Error::AddMessage(Error::LogType::LOG, "  Node Index:     " + ToString(node_index));
+		Error::AddMessage(Error::LogType::LOG, "  Matrix Index:   " + ToString(matrix_index));
+		Error::AddMessage(Error::LogType::LOG, "  Material Index: " + ToString(material_index));
+		Error::AddMessage(Error::LogType::LOG, "  Vertex Index:   " + ToString(vertex_index));
+		Error::AddMessage(Error::LogType::LOG, "  Indices Index:  " + ToString(indices_index));
 	}
 
 	void SonicSubmesh::write(File *file) {
@@ -67,7 +67,7 @@ namespace LibS06 {
 		unsigned int extra_count = file->Read<u32>();
 		size_t extra_offset = file->Read<u32>();
 
-		Error::AddMessage(Error::LogType::WARNING, "Mesh (" + ToString(flag) + ") found with " + ToString(submesh_count) + " submeshes.");
+		Error::AddMessage(Error::LogType::LOG, "Mesh (" + ToString(flag) + ") found with " + ToString(submesh_count) + " submeshes.");
 
 		for (size_t i=0; i<submesh_count; i++) {
 			if (file_mode != MODE_GNO) {

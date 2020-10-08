@@ -186,7 +186,7 @@ namespace LibS06 {
 		}
 		
 		head_address = file->GetCurrentAddress()-4;
-		section_size = file->Read<u32>(Endianess::Big);
+		section_size = file->Read<u32>();
 	}
 
 	void SonicXNSection::write(File *file) {
@@ -207,7 +207,7 @@ namespace LibS06 {
 		
 		section_size = bookmark - head_address - LIBS06_XNSECTION_HEADER_SIZE;
 		file->SetAddress(head_address + 4);
-		file->Write<u32>(section_size, Endianess::Big);
+		file->Write<u32>(section_size);
 
 		file->SetAddress(bookmark);
 	}
@@ -421,9 +421,9 @@ namespace LibS06 {
 			offset_table->clear();
 			
 			file->SortAddressTable();
-			std::list<size_t> table = file->GetAddressTable();
-			for (std::list<size_t>::iterator it=table.begin(); it!=table.end(); it++) {
-				offset_table->push(*it);
+			for (auto& item : file->GetAddressTable())
+			{
+				offset_table->push(item);
 			}
 
 			offset_table->write(file);

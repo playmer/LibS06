@@ -88,11 +88,11 @@ namespace LibS06 {
 	void SonicOffsetTable::printList() {
 		size_t index=0;
 		for (std::list<SonicOffsetTableEntry>::iterator it=entries.begin(); it!=entries.end(); it++) {
-			Error::AddMessage(Error::LogType::WARNING, std::to_string((*it).code) + "  (" + std::to_string((*it).offset) + ") " + std::to_string(index));
+			Error::AddMessage(Error::LogType::LOG, std::to_string((*it).code) + "  (" + std::to_string((*it).offset) + ") " + std::to_string(index));
 			index++;
 		}
 
-		Error::AddMessage(Error::LogType::WARNING, "Done");
+		Error::AddMessage(Error::LogType::LOG, "Done");
 	}
 
 	void SonicOffsetTableEntry::write(File *file) {

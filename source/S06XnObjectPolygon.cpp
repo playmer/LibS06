@@ -72,10 +72,10 @@ namespace LibS06 {
 			unsigned char strip_flag = file->Read<u8>();
 			unsigned short face_total = 0;
 
-			Error::AddMessage(Error::LogType::WARNING, "Reading strip with flag " + ToString((int)strip_flag) + " at address " + ToString(file->GetCurrentAddress()));
+			Error::AddMessage(Error::LogType::LOG, "Reading strip with flag " + ToString((int)strip_flag) + " at address " + ToString(file->GetCurrentAddress()));
 
 			while (file->GetCurrentAddress() < (index_table_address+index_table_size)) {
-				printf("Reading strip type at address %d\n", file->GetCurrentAddress());
+				printf("Reading strip type at address %d\n", (int)file->GetCurrentAddress());
 				unsigned char strip_type = file->Read<u8>();
 
 				if (strip_type == 0x99) {
@@ -115,7 +115,7 @@ namespace LibS06 {
 						}
 					}
 					else {
-						printf("Unknown Strip Flag %d at address %d\n", (int) strip_flag, file->GetCurrentAddress());
+						printf("Unknown Strip Flag %d at address %d\n", (int) strip_flag, (int)file->GetCurrentAddress());
 						getchar();
 						break;
 					}
@@ -124,7 +124,7 @@ namespace LibS06 {
 					break;
 				}
 				else {
-					printf("Unknown Strip Type %d at address %d\n", (int) strip_type, file->GetCurrentAddress());
+					printf("Unknown Strip Type %d at address %d\n", (int) strip_type, (int)file->GetCurrentAddress());
 					getchar();
 					break;
 				}
@@ -147,7 +147,7 @@ namespace LibS06 {
 				format_size = 6;
 			}
 			else {
-				printf("Unknown Strip List Format Type %d at address %d\n", (int) flag, file->GetCurrentAddress());
+				printf("Unknown Strip List Format Type %d at address %d\n", (int) flag, (int)file->GetCurrentAddress());
 				getchar();
 				return;
 			}
@@ -198,7 +198,7 @@ namespace LibS06 {
 			}
 		}
 		else {
-			printf("Unknown Polygon Table Type %d at address %d\n", (int) table_count, table_address);
+			printf("Unknown Polygon Table Type %d at address %d\n", (int) table_count, (int)table_address);
 			getchar();
 		}
 	}

@@ -114,16 +114,16 @@ namespace LibS06 {
 			ERROR
 		};
 
-		void AddMessage(LogType aLogType, std::string aMessage){
+		inline void AddMessage(LogType aLogType, std::string aMessage){
 			switch (aLogType)
 			{
-				case LogType::LOG: std::cout << "LOG: ";
-				case LogType::WARNING: std::cout << "WARNING: ";
-				case LogType::NULL_REFERENCE: std::cout << "NULL_REFERENCE: ";
-				case LogType::ERROR: std::cout << "ERROR: ";
+				case LogType::LOG: std::cout << "LOG: "; break;
+				case LogType::WARNING: std::cout << "WARNING: "; break;
+				case LogType::NULL_REFERENCE: std::cout << "NULL_REFERENCE: "; break;
+				case LogType::ERROR: std::cout << "ERROR: "; break;
 			}
 
-			std::cout << aMessage;
+			std::cout << aMessage << std::endl;
 
 			if (LogType::ERROR == aLogType || LogType::NULL_REFERENCE == aLogType)
 				throw aMessage;
@@ -133,8 +133,20 @@ namespace LibS06 {
 		template <typename ...Args>
 		void printfMessage(LogType aLogType, Args... aArgs)
 		{
+			switch (aLogType)
+			{
+				case LogType::LOG: std::cout << "LOG: "; break;
+				case LogType::WARNING: std::cout << "WARNING: "; break;
+				case LogType::NULL_REFERENCE: std::cout << "NULL_REFERENCE: "; break;
+				case LogType::ERROR: std::cout << "ERROR: "; break;
+			}
+
 			printf(aArgs...);
-			throw "PrintfMessage";
+
+			puts("");
+			
+			if (LogType::ERROR == aLogType || LogType::NULL_REFERENCE == aLogType)
+				throw "PrintfMessage";
 		}
 	}
 	
@@ -1018,7 +1030,7 @@ namespace LibS06 {
 			SonicXNEffect *effect;
 			SonicXNBones *bones_names;
 
-			AABB aabb;
+			//AABB aabb;
 
 			std::string name;
 

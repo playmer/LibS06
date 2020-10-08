@@ -30,9 +30,12 @@ target_sources(LibS06
         S06XnTexture.cpp
 )
 
+target_compile_features(LibS06 PUBLIC cxx_std_17)
+
 target_link_libraries(LibS06
     PUBLIC 
         glm
+        half_float
 )
 
 target_include_directories(LibS06 

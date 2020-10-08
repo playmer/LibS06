@@ -1,12 +1,14 @@
 
-#include "File.hpp"
+#include "source/File.hpp"
+#include "source/S06XnFile.h"
 
 int main()
 {
   using namespace LibS06;
 
-  File file("", File::Style::Read, Endianess::Big);
+  std::string fileName = "F:/Roms/Xbox360/Sonic the Hedgehog/Arcs/player_sonic/win32/player/sonic_new/sonic_Root.xno";
 
-  file.Read<u16>();
+  SonicXNFile file(fileName);
+
   return 0;
 }

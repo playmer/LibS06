@@ -225,7 +225,7 @@ namespace LibS06 {
 		printf("Writing bone %d...\n", current);
 		std::string bone_name=(bones_names ? bones_names->getName(current) : name+ToString(current));
 
-		Error::AddMessage(Error::LogType::WARNING, "Writing bone " + ToString(current) + " with name " + bone_name + " and Skinning Matrix Index " + ToString(bones[current]->matrix_index));
+		Error::AddMessage(Error::LogType::LOG, "Writing bone " + ToString(current) + " with name " + bone_name + " and Skinning Matrix Index " + ToString(bones[current]->matrix_index));
 
 		printf("Writing bone with name %s...\n", bone_name.c_str());
 

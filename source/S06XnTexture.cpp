@@ -44,7 +44,7 @@ namespace LibS06 {
 			textures.push_back(texture_unit);
 			sizes.push_back(name_size);
 
-			Error::printfMessage(Error::LogType::WARNING, "Found texture unit %d: %s (Flags: %d)", i, texture_unit.c_str(), name_size);
+			Error::printfMessage(Error::LogType::LOG, "Found texture unit %d: %s (Flags: %d)", i, texture_unit.c_str(), name_size);
 		}
 	}
 

@@ -27,7 +27,6 @@ namespace LibS06 {
 		XYZ,
 		ZXY,
 		XZY,
-		XYZ,
 	};
 
 	RotationOrder GetRotationOrder(unsigned int aFlag)
@@ -155,7 +154,7 @@ namespace LibS06 {
 			case RotationOrder::ZXY: return fromZXYInts(rX, rY, rZ);
 			default: 
 				Error::AddMessage(Error::LogType::ERROR, "Invalid rotation order passed to ReadRotation");
-				return; // AddMessage will throw, but we need a return here for the compiler.
+				return glm::quat(); // AddMessage will throw, but we need a return here for the compiler.
 		}
 	}
 	

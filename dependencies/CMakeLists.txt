@@ -1,4 +1,6 @@
 
+add_subdirectory(half)
+
 ##########################################################################
 # Turn off/configure various parts of glm.
 option(GLM_TEST_ENABLE "Build unit tests" OFF)

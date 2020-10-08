@@ -5,9 +5,9 @@
 #include <array>
 #include <cstdint>
 #include <iostream>
-#include <list>
 #include <string>
 #include <type_traits>
+#include <vector>
 
 #include "half.h"
 
@@ -27,7 +27,7 @@ namespace LibS06
   using u32 = std::uint32_t;
   using u64 = std::uint64_t;
 
-  using f32 = f32;
+  using f32 = float;
   using f64 = double;
 
   enum class Endianess
@@ -36,7 +36,7 @@ namespace LibS06
     Big
   };
 
-  bool IsBigEndian(void)
+  inline bool IsBigEndian(void)
   {
       union {
           uint32_t i;
@@ -46,7 +46,7 @@ namespace LibS06
       return bint.c[0] == 1; 
   }
 
-  Endianess SystemEndianess()
+  inline Endianess SystemEndianess()
   {
     return IsBigEndian() ? Endianess::Big : Endianess::Little;
   }
@@ -129,7 +129,7 @@ namespace LibS06
     template <typename tType>
     tType Read()
     {
-      return Read(mFileDefaultEndianess);
+      return Read<tType>(mFileDefaultEndianess);
     }
 
     template <>
@@ -217,9 +217,9 @@ namespace LibS06
       return Read<glm::mat4>(mFileDefaultEndianess);
     }
 
-    size_t ReadAddress(Endianess aEndianessRead)
+    size_t ReadAddress(Endianess aEndianess)
     {
-      static_assert(false, "Implement");
+      return Read<u32>(aEndianess) + mRootNodeAddress;
     }
 
     size_t ReadAddress(bool aBigEndian)
@@ -232,12 +232,13 @@ namespace LibS06
       return ReadAddress(mFileDefaultEndianess);
     }
 
-    void WriteAddress(size_t aAddress, Endianess aEndianessRead)
+    void WriteAddress(size_t aAddress, Endianess aEndianess)
     {
-      if (aEndianessRead == Endianess::Big) 
+      if (aEndianess == Endianess::Big) 
         mFinalAddressTable.push_back(GetCurrentAddress() - mRootNodeAddress);
 
-      Write<u32>(aAddress);
+      // Addresses are written as an offset into the file from the mRootNodeAddress.
+      Write<u32>(aAddress - mRootNodeAddress);
     }
     
     void WriteAddressFileEndianess(size_t aAddress)
@@ -273,7 +274,7 @@ namespace LibS06
       std::string value;
       auto character = Read<char>();
 
-      while ('\n' != character);
+      while ('\n' != character)
       {
         value += character;
         character = Read<char>();
@@ -350,10 +351,10 @@ namespace LibS06
     }
 
     
-    constexpr f32 cMATH_COLOR_CHAR = 255.0f;
+    const f32 cMATH_COLOR_CHAR = 255.0f;
 
     
-	  glm::vec4 ReadABGR8()
+	  glm::vec4 ReadARGB8()
     {
       glm::vec4 value;
 		  value.a = ((float)Read<u8>()) / cMATH_COLOR_CHAR;
@@ -499,22 +500,73 @@ namespace LibS06
 
   void SortAddressTable()
   {
-    static_assert(false, "Implement");
+    std::sort(mFinalAddressTable.begin(), mFinalAddressTable.end());
   }
 
-  std::list<size_t> GetAddressTable()
+  std::vector<size_t> const& GetAddressTable()
   {
-    static_assert(false, "Implement");
+    return mFinalAddressTable;
   }
   
-  void ReadAddressTableBBIN(u32 aSize)
+  void ReadAddressTableBBIN(u32 aTableSize)
   {
-    static_assert(false, "Implement");
+		size_t current_address = mRootNodeAddress;
+
+    std::vector<unsigned char> offsetTable;
+    offsetTable.resize(aTableSize);
+    
+    ReadStream((void*)offsetTable.data(), aTableSize);
+
+		mFinalAddressTable.clear();
+
+		for (size_t i=0; i < aTableSize; i++)
+    {
+			size_t low = offsetTable[i] & 0x3F;
+
+			if ((offsetTable[i] & 0x80) && (offsetTable[i] & 0x40))
+      {
+				i += 3;
+				current_address += (low * 0x4000000) + (offsetTable[i-2] * 0x40000) + (offsetTable[i-1] * 0x400) + (offsetTable[i] * 0x4);
+			}
+			else if (offsetTable[i] & 0x80)
+      {
+				i++;
+				current_address += (low * 0x400) + (offsetTable[i] * 4);
+			}
+			else if (offsetTable[i] & 0x40)
+      {
+				current_address += 4 * low;
+			}
+
+			mFinalAddressTable.push_back(current_address - mRootNodeAddress);
+		}
   }
 
-  void WriteAddressTableBBIN()
+  void WriteAddressTableBBIN(size_t negativeOffset = 0)
   {
-    static_assert(false, "Implement");
+		size_t current_address = negativeOffset;
+		for (auto it = mFinalAddressTable.begin(); it != mFinalAddressTable.end(); it++)
+    {
+			size_t difference = (*it) - current_address;
+
+			if (difference > 0xFFFC)
+      {
+				unsigned int offset_int = 0xC0000000 | (difference >> 2);
+        Write<u32>(offset_int, Endianess::Big);
+			}
+			else if (difference > 0xFC)
+      {
+				unsigned short offset_short = 0x8000 | (difference >> 2);
+        Write<u16>(offset_short, Endianess::Big);
+			}
+			else
+      {
+				char offset_byte = 0x40 | (difference >> 2);
+        Write<char>(offset_byte);
+			}
+
+			current_address += difference;
+		}
   }
 
 
@@ -540,6 +592,6 @@ namespace LibS06
     Endianess mFileDefaultEndianess;
     size_t mGlobalOffset = 0;
     size_t mRootNodeAddress = 0;
-		std::list<size_t> mFinalAddressTable;
+		std::vector<size_t> mFinalAddressTable;
   };
 }

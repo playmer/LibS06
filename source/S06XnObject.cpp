@@ -81,7 +81,7 @@ namespace LibS06 {
 			for (size_t i=0; i<material_parts_count; i++) {
 				file->SetAddress(material_parts_address + i*8);
 
-				printf("Material Table %d:\n", i);
+				printf("Material Table %d:\n", (int)i);
 				SonicMaterialTable *material_table = new SonicMaterialTable();
 				material_table->read(file, file_mode, big_endian);
 				material_tables.push_back(material_table);
@@ -129,15 +129,15 @@ namespace LibS06 {
 			}
 			
 
-			if (bones_names) printf("Bone %s (%d):\n", bones_names->getName(i).c_str(), i);
-			else printf("Bone (%d):\n", i);
+			if (bones_names) printf("Bone %s (%d):\n", bones_names->getName(i).c_str(), (int)i);
+			else printf("Bone (%d):\n", (int)i);
 
 			SonicBone *bone = new SonicBone();
 			bone->read(file, big_endian, file_mode);
 			bones.push_back(bone);
 
 			if (bones_names) {
-				Error::AddMessage(Error::LogType::WARNING, bones_names->getName(i) + ": " + ToString(bone->matrix_index));
+				Error::AddMessage(Error::LogType::LOG, bones_names->getName(i) + ": " + ToString(bone->matrix_index));
 			}
 			else {
 				printf("   Matrix Index: %d\n", bone->matrix_index);

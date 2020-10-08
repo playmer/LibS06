@@ -413,8 +413,7 @@ namespace LibS06 {
 		u32 table_address = file->GetCurrentAddress() - 32;
 		file->SortAddressTable();
 
-		std::list<size_t> file_address_table = file->GetAddressTable();
-		file->writeAddressTableBBIN();
+		file->WriteAddressTableBBIN();
 		file->FixPadding(8);
 
 		unsigned int file_size = file->GetFileSize();

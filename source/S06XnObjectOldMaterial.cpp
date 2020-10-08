@@ -26,7 +26,7 @@ namespace LibS06 {
 		unsigned short flag_2 = file->Read<u16>();
 		size_t table_address = file->ReadAddressFileEndianess();
 
-		Error::AddMessage(Error::LogType::WARNING, "Reading Old Material Type " + ToString(flag_1) + " at " + ToString(table_address) + " with flag " + ToString(flag_2));
+		Error::AddMessage(Error::LogType::LOG, "Reading Old Material Type " + ToString(flag_1) + " at " + ToString(table_address) + " with flag " + ToString(flag_2));
 
 		file->SetAddress(table_address);
 
@@ -46,11 +46,11 @@ namespace LibS06 {
 			file->SetAddress(table_address+96);
 		}
 		else {
-			printf("Unknown Old Material Type %d at %d\n", (int)flag_1, table_address);
+			printf("Unknown Old Material Type %d at %d\n", (int)flag_1, (int)table_address);
 			getchar();
 		}
 
 		texture_unit = file->Read<u32>();
-		Error::AddMessage(Error::LogType::WARNING, "  Resulting texture unit index is: " + ToString(texture_unit));
+		Error::AddMessage(Error::LogType::LOG, "  Resulting texture unit index is: " + ToString(texture_unit));
 	}
 };

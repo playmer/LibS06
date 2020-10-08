@@ -97,7 +97,7 @@ namespace LibS06 {
 		flag_2 = file->Read<u32>();
 		flag_3_f = file->Read<f32>();
 		flag_3 = file->Read<u32>();
-		Error::printfMessage(Error::LogType::WARNING, "Instance Material: %f %d", flag_f, index);
+		Error::printfMessage(Error::LogType::LOG, "Instance Material: %f %d", flag_f, index);
 	}
 
 	void SonicTextureUnit::write(File *file) {
@@ -194,7 +194,7 @@ namespace LibS06 {
 			}
 		}
 
-		Error::AddMessage(Error::LogType::WARNING, "Done with Material.");
+		Error::AddMessage(Error::LogType::LOG, "Done with Material.");
 	}
 
 	void SonicMaterialTable::write(File *file, XNFileMode file_mode) {

@@ -202,7 +202,7 @@ namespace LibS06 {
 		printf("%d %d %d\n", vertex_size, vertex_offset, bone_table_count);
 		printf("Flags: %d %d\n", flag_1, flag_2);
 
-		Error::AddMessage(Error::LogType::WARNING, "Vertex Size / Vertex Flag 1 / Vertex Flag 2: " + ToString(vertex_size) + " / " + ToString(flag_1) + " / " + ToString(flag_2));
+		Error::AddMessage(Error::LogType::LOG, "Vertex Size / Vertex Flag 1 / Vertex Flag 2: " + ToString(vertex_size) + " / " + ToString(flag_1) + " / " + ToString(flag_2));
 
 		if(bone_table_count > 32) {
 			printf("Bone table is bigger than 32! Size: %d\n", bone_table_count);
@@ -218,7 +218,7 @@ namespace LibS06 {
 			bone_table_str += ToString(bone) + " ";
 		}
 
-		Error::AddMessage(Error::LogType::WARNING, "Vertex Table with a bone blending table of size " + ToString(bone_table.size()));
+		Error::AddMessage(Error::LogType::LOG, "Vertex Table with a bone blending table of size " + ToString(bone_table.size()));
 
 		for (size_t i=0; i<vertex_count; i++) {
 			file->SetAddress(vertex_offset + i * vertex_size);

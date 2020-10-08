@@ -68,7 +68,7 @@ namespace LibS06 {
 	}
 
 	void SonicFrameValueIntBeta::read(File *file, bool big_endian) {
-		frame = file->Read<f32();
+		frame = file->Read<f32>();
 		value = file->Read<u16>();
 	}
 
@@ -120,10 +120,10 @@ namespace LibS06 {
 			getchar();
 		}
 
-		Error::printfMessage(Error::LogType::WARNING, "MotionControl Type %s(%x) for Bone %d:", type_str.c_str(), type, bone_index);
-		Error::printfMessage(Error::LogType::WARNING, "  Flag: %d", flag);
-		Error::printfMessage(Error::LogType::WARNING, "  Start: %d End: %f Start Key: %f End Key: %f", start_frame, end_frame, start_frame, end_frame);
-		Error::printfMessage(Error::LogType::WARNING, "  Elements: %d(%d) Elements Address: %d", element_count, element_size, address);
+		Error::printfMessage(Error::LogType::LOG, "MotionControl Type %s(%x) for Bone %d:", type_str.c_str(), type, bone_index);
+		Error::printfMessage(Error::LogType::LOG, "  Flag: %d", flag);
+		Error::printfMessage(Error::LogType::LOG, "  Start: %d End: %f Start Key: %f End Key: %f", start_frame, end_frame, start_frame, end_frame);
+		Error::printfMessage(Error::LogType::LOG, "  Elements: %d(%d) Elements Address: %d", element_count, element_size, address);
 
 		if (element_size == 24) {
 			for (size_t i=0; i<element_count; i++) {
