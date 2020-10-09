@@ -3,6 +3,7 @@ add_library(LibS06)
 target_sources(LibS06
     PRIVATE
         File.hpp
+        File.cpp
         S06Collision.cpp
         S06Collision.h
         S06Common.cpp

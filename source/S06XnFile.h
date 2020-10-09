@@ -1132,9 +1132,15 @@ namespace LibS06 {
 			std::string header_object;
 			std::string header_motion;
 
-			
+			std::unique_ptr<File> mFileReading;
 			void PrintOffsetTables(File* aFile);
 		public:
+			File* GetReadFile()
+			{
+				return mFileReading.get();
+			}
+
+
 			SonicXNFile(std::string filename, XNFileMode file_mode_parameter=MODE_AUTODETECT);
 
 			SonicXNFile(XNFileMode file_mode_parameter);

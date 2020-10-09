@@ -100,13 +100,13 @@ namespace LibS06 {
 
 		auto endianessOfFile = big_endian ? Endianess::Big : Endianess::Little;
 		
-		File file(filename, File::Style::Read, endianessOfFile);
+		mFileReading = std::make_unique<File>(filename, File::Style::Read, endianessOfFile);
 
-		if (file.Valid()) {
+		if (mFileReading->Valid()) {
 			while (!end) {
-				readSection(&file);
+				readSection(mFileReading.get());
 			}
-			file.Close();
+			mFileReading->Close();
 		}
 
 		SonicXNObject *object=getObject();
@@ -116,7 +116,7 @@ namespace LibS06 {
 			object->setNames(name);
 		}
 
-		PrintOffsetTables(&file);
+		PrintOffsetTables(mFileReading.get());
 	}
 
 	void SonicXNFile::PrintOffsetTables(File* aFile)

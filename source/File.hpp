@@ -37,8 +37,8 @@ namespace LibS06
 
   enum class Endianess
   {
-    Little, 
-    Big
+    Little = 0, 
+    Big = 1
   };
 
   inline bool IsBigEndian(void)
@@ -68,6 +68,8 @@ namespace LibS06
       aValue = destination.value;
   }
 
+  std::vector<char> ReadFileIntoMemory(std::string aName);
+
   class File
   {
   public:
@@ -77,23 +79,7 @@ namespace LibS06
       Write
     };
 
-    File(std::string aFile, Style aStyle, Endianess aEndianess = Endianess::Little)
-      : mStyle{aStyle}
-      , mFileDefaultEndianess{aEndianess}
-    {
-      switch (aStyle)
-      {
-        case Style::Read: mFile = fopen(aFile.c_str(), "rb"); break;
-        case Style::Write: mFile = fopen(aFile.c_str(), "wb"); break;
-      }
-
-      if (nullptr == mFile)
-      {
-        std::string output = "Couldn't open " + aFile + " for " + (mStyle == Style::Read ? "Reading" : "Writing");
-        std::cout << output;
-        throw(output);
-      }
-    }
+    File(std::string aFile, Style aStyle, Endianess aEndianess = Endianess::Little);
 
     bool Valid()
     {
@@ -222,98 +208,17 @@ namespace LibS06
       return Read<glm::mat4>(mFileDefaultEndianess);
     }
 
-
-    // __LINE__
-    void LogReadAddress(const char* aFileName, size_t aLineInFile, const char* aFunctionName)
-    {
-      std::string line;
-      line += aFileName;
-      line += "(";
-      line += std::to_string(aLineInFile);
-      line += "): Address read in ";
-      line += aFunctionName;
-      line += " here.";
-      
-      mAddressReadMap.emplace(GetCurrentAddress() - mRootNodeAddress, line);
-    }
-
-    size_t ReadAddress(Endianess aEndianess, const char* aFileName, size_t aLineInFile, const char* aFunction)
-    {
-      LogReadAddress(aFileName, aLineInFile, aFunction);
-
-      return Read<u32>(aEndianess) + mRootNodeAddress;
-    }
-
-    size_t ReadAddress(bool aBigEndian, const char* aFileName, size_t aLineInFile, const char* aFunction)
-    {
-      return ReadAddress(aBigEndian ? Endianess::Big : Endianess::Little, aFileName, aLineInFile, aFunction);
-    }
-    
-    size_t ReadAddressFileEndianess(const char* aFileName, size_t aLineInFile, const char* aFunction)
-    {
-      return ReadAddress(mFileDefaultEndianess, aFileName, aLineInFile, aFunction);
-    }
-
-    void WriteAddress(size_t aAddress, Endianess aEndianess)
-    {
-      if (aEndianess == Endianess::Big) 
-        mFinalAddressTable.push_back(GetCurrentAddress() - mRootNodeAddress);
-
-      // Addresses are written as an offset into the file from the mRootNodeAddress.
-      Write<u32>(aAddress - mRootNodeAddress);
-    }
-    
-    void WriteAddressFileEndianess(size_t aAddress)
-    {
-      WriteAddress(aAddress, mFileDefaultEndianess);
-    }
-
-    //size_t WriteAddress(size_t aAddress)
-    //{
-    //  WriteAddress(aAddress, mFileDefaultEndianess);
-    //}
-    
-    void WriteNullTerminatedString(char const* aString)
-    {
-      for (; '\0' != *aString; ++aString)
-        Write<char>(*aString, mFileDefaultEndianess);
-
-      Write<char>('\0', mFileDefaultEndianess);
-    }
-
-    std::string ReadString(size_t aSize)
-    {
-      std::string value;
-
-      for (size_t i = 0; i < aSize; ++i)
-        value += Read<char>();
-
-      return value;
-    }
-
-    std::string ReadNullTerminatedString()
-    {
-      std::string value;
-      auto character = Read<char>();
-
-      while ('\0' != character)
-      {
-        value += character;
-        character = Read<char>();
-      } 
-
-      return value;
-    }
-
-    void ReadStream(void* aStream, size_t aSize)
-    {
-      fread(aStream, 1, aSize, mFile);
-    }
-    
-    void WriteStream(void const* aStream, size_t aSize)
-    {
-      fwrite(aStream, 1, aSize, mFile);
-    }
+    void LogReadAddress(const char* aFileName, size_t aLineInFile, const char* aFunctionName);
+    size_t ReadAddress(Endianess aEndianess, const char* aFileName, size_t aLineInFile, const char* aFunction);
+    size_t ReadAddress(bool aBigEndian, const char* aFileName, size_t aLineInFile, const char* aFunction);
+    size_t ReadAddressFileEndianess(const char* aFileName, size_t aLineInFile, const char* aFunction);
+    void WriteAddress(size_t aAddress, Endianess aEndianess);
+    void WriteAddressFileEndianess(size_t aAddress);
+    void WriteNullTerminatedString(char const* aString);
+    std::string ReadString(size_t aSize);
+    std::string ReadNullTerminatedString();
+    void ReadStream(void* aStream, size_t aSize);
+    void WriteStream(void const* aStream, size_t aSize);
     
     template <typename tType>
     void Write(tType const& aValue, Endianess aEndianessRead)
@@ -376,74 +281,14 @@ namespace LibS06
     const f32 cMATH_COLOR_CHAR = 255.0f;
 
     
-	  glm::vec4 ReadARGB8()
-    {
-      glm::vec4 value;
-		  value.a = ((float)Read<u8>()) / cMATH_COLOR_CHAR;
-		  value.r = ((float)Read<u8>()) / cMATH_COLOR_CHAR;
-		  value.g = ((float)Read<u8>()) / cMATH_COLOR_CHAR;
-		  value.b = ((float)Read<u8>()) / cMATH_COLOR_CHAR;
-      return value;
-	  }
-    
-    glm::vec4 ReadABGR8()
-    {
-      glm::vec4 value;
-		  value.a = ((float)Read<u8>()) / cMATH_COLOR_CHAR;
-		  value.b = ((float)Read<u8>()) / cMATH_COLOR_CHAR;
-		  value.g = ((float)Read<u8>()) / cMATH_COLOR_CHAR;
-		  value.r = ((float)Read<u8>()) / cMATH_COLOR_CHAR;
-      return value;
-	  }
-    
-    glm::vec4 ReadRGBA8()
-    {
-      glm::vec4 value;
-		  value.r = ((float)Read<u8>()) / cMATH_COLOR_CHAR;
-		  value.g = ((float)Read<u8>()) / cMATH_COLOR_CHAR;
-		  value.b = ((float)Read<u8>()) / cMATH_COLOR_CHAR;
-		  value.a = ((float)Read<u8>()) / cMATH_COLOR_CHAR;
-      return value;
-	  }
-
-	  void WriteRGBA8(glm::vec4 aValue) {
-		  Write<u8>((unsigned char)(aValue.r * cMATH_COLOR_CHAR));
-		  Write<u8>((unsigned char)(aValue.g * cMATH_COLOR_CHAR));
-		  Write<u8>((unsigned char)(aValue.b * cMATH_COLOR_CHAR));
-		  Write<u8>((unsigned char)(aValue.a * cMATH_COLOR_CHAR));
-	  }
-
-	  void WriteABGR8(glm::vec4 aValue) {
-		  Write<u8>((unsigned char)(aValue.a * cMATH_COLOR_CHAR));
-		  Write<u8>((unsigned char)(aValue.b * cMATH_COLOR_CHAR));
-		  Write<u8>((unsigned char)(aValue.g * cMATH_COLOR_CHAR));
-		  Write<u8>((unsigned char)(aValue.r * cMATH_COLOR_CHAR));
-	  }
-
-	  void WriteARGB8(glm::vec4 aValue) {
-		  Write<u8>((unsigned char)(aValue.a * cMATH_COLOR_CHAR));
-		  Write<u8>((unsigned char)(aValue.r * cMATH_COLOR_CHAR));
-		  Write<u8>((unsigned char)(aValue.g * cMATH_COLOR_CHAR));
-		  Write<u8>((unsigned char)(aValue.b * cMATH_COLOR_CHAR));
-	  }
-
-    glm::vec3 ReadNormal360(Endianess aEndianessRead)
-    {
-	    unsigned int value = Read<u32>(aEndianessRead);
-      glm::vec3 toReturn;
-
-	    toReturn.x = ((value&0x00000400 ? -1 : 0) + (float)((value>>2)&0x0FF)  / 256.0f);
-	    toReturn.y = ((value&0x00200000 ? -1 : 0) + (float)((value>>13)&0x0FF) / 256.0f);
-	    toReturn.z = ((value&0x80000000 ? -1 : 0) + (float)((value>>23)&0x0FF) / 256.0f);
-
-      return toReturn;
-    }
-    
-    glm::vec3 ReadNormal360()
-    {
-      return ReadNormal360(mFileDefaultEndianess);
-    }
-
+    glm::vec4 ReadARGB8();
+    glm::vec4 ReadABGR8();
+    glm::vec4 ReadRGBA8();
+    void WriteRGBA8(glm::vec4 aValue);
+    void WriteABGR8(glm::vec4 aValue);
+    void WriteARGB8(glm::vec4 aValue);
+    glm::vec3 ReadNormal360(Endianess aEndianessRead);
+    glm::vec3 ReadNormal360();
     
     template <typename tType>
     void Write(tType const& aValue)
@@ -451,163 +296,53 @@ namespace LibS06
       Write(aValue, mFileDefaultEndianess);
     }
 
-    void WriteByte(u8 aByte, size_t aNumber)
-    {
-      for (size_t i = 0; i < aNumber; ++i)
-        WriteData(aByte);
-    }
+    void WriteByte(u8 aByte, size_t aNumber);
+    void SetAddress(size_t aAddress);
+    void OffsetAddress(size_t aOffset);
 
-    void SetAddress(size_t aAddress)
-    {
-      fseek(mFile, aAddress + mGlobalOffset, SEEK_SET);
-    }
+      // Goes to the end of the file.
+    void GoToEnd();
+    size_t GetCurrentAddress();
+    size_t GetFileSize();
 
-    void OffsetAddress(size_t aOffset)
-    {
-      fseek(mFile, aOffset, SEEK_CUR);
-    }
+    size_t FixPadding(size_t aMultiple);
+    size_t FixPaddingRead(size_t aMultiple);
+    void SetRootNodeAddress(size_t aRootNodeAddress);
+    void SortAddressTable();
+    std::vector<size_t> const& GetAddressTable();
+    void ReadAddressTableBBIN(u32 aTableSize);
+    void WriteAddressTableBBIN(size_t negativeOffset = 0);
 
-    // Goes to the end of the file.
-    void GoToEnd()
-    {
-      fseek(mFile, 0, SEEK_END);
-    }
-
-    size_t GetCurrentAddress()
-    {
-			return ftell(mFile) - mGlobalOffset;
-    }
+    std::map<size_t, std::string> const& GetAddressMap();
+    size_t GetRootNodeAddress();
     
-    size_t File::GetFileSize()
+    std::vector<char>& GetData()
     {
-	    size_t currentAddress = GetCurrentAddress();
-	    fseek(mFile, 0, SEEK_END);
-	    size_t fileSize = ftell(mFile);
-	    SetAddress(currentAddress);
-
-	    return fileSize;
+      return Data;
     }
 
-    
-
-	size_t File::FixPadding(size_t aMultiple)
-	{
-		size_t address = GetCurrentAddress();
-		size_t padding = aMultiple - (address%aMultiple);
-
-		if (padding == aMultiple)
-			return 0;
-
-    WriteByte(0, padding);
-
-		return padding;
-	}
-
-	size_t File::FixPaddingRead(size_t aMultiple)
-	{
-		size_t address = GetCurrentAddress();
-		size_t padding = aMultiple - (address%aMultiple);
-
-		if (padding == aMultiple)
-			return 0;
-
-		SetAddress(address + padding);
-		return padding;
-	}
-
-  void SetRootNodeAddress(size_t aRootNodeAddress)
-  {
-    mRootNodeAddress = aRootNodeAddress;
-  }
-
-  void SortAddressTable()
-  {
-    std::sort(mFinalAddressTable.begin(), mFinalAddressTable.end());
-  }
-
-  std::vector<size_t> const& GetAddressTable()
-  {
-    return mFinalAddressTable;
-  }
-  
-  void ReadAddressTableBBIN(u32 aTableSize)
-  {
-		size_t current_address = mRootNodeAddress;
-
-    std::vector<unsigned char> offsetTable;
-    offsetTable.resize(aTableSize);
-    
-    ReadStream((void*)offsetTable.data(), aTableSize);
-
-		mFinalAddressTable.clear();
-
-		for (size_t i=0; i < aTableSize; i++)
+    std::vector<bool> const& GetDataInfo() const
     {
-			size_t low = offsetTable[i] & 0x3F;
-
-			if ((offsetTable[i] & 0x80) && (offsetTable[i] & 0x40))
-      {
-				i += 3;
-				current_address += (low * 0x4000000) + (offsetTable[i-2] * 0x40000) + (offsetTable[i-1] * 0x400) + (offsetTable[i] * 0x4);
-			}
-			else if (offsetTable[i] & 0x80)
-      {
-				i++;
-				current_address += (low * 0x400) + (offsetTable[i] * 4);
-			}
-			else if (offsetTable[i] & 0x40)
-      {
-				current_address += 4 * low;
-			}
-
-			mFinalAddressTable.push_back(current_address - mRootNodeAddress);
-		}
-  }
-
-  void WriteAddressTableBBIN(size_t negativeOffset = 0)
-  {
-		size_t current_address = negativeOffset;
-		for (auto it = mFinalAddressTable.begin(); it != mFinalAddressTable.end(); it++)
-    {
-			size_t difference = (*it) - current_address;
-
-			if (difference > 0xFFFC)
-      {
-				unsigned int offset_int = 0xC0000000 | (difference >> 2);
-        Write<u32>(offset_int, Endianess::Big);
-			}
-			else if (difference > 0xFC)
-      {
-				unsigned short offset_short = 0x8000 | (difference >> 2);
-        Write<u16>(offset_short, Endianess::Big);
-			}
-			else
-      {
-				char offset_byte = 0x40 | (difference >> 2);
-        Write<char>(offset_byte);
-			}
-
-			current_address += difference;
-		}
-  }
-  
-
-  std::map<size_t, std::string> const& GetAddressMap()
-  {
-    return mAddressReadMap;
-  }
-
-  size_t GetRootNodeAddress()
-  {
-    return mRootNodeAddress;
-  }
+      return DataInfo;
+    }
 
   private:
     template <typename tType>
     tType ReadData()
     {
       tType value;
-		  fread((void*)&value, sizeof(tType), 1, mFile);
+      tType value2;
+
+      fread((void*)&value, sizeof(tType), 1, mFile);
+      memcpy((void*)&value2, Data.data() + CurrentPosition, sizeof(tType));
+      
+      // Mark that we've read these bytes
+      std::fill_n(DataInfo.begin() + CurrentPosition, sizeof(tType), true);
+
+      assert(value == value2);
+
+      CurrentPosition += sizeof(tType);
+
       return value;
     }
   
@@ -619,13 +354,21 @@ namespace LibS06
       fwrite((void*)&valueToWrite, sizeof(tType), 1, mFile);
     }
 
-    FILE* mFile = nullptr;
-    Style mStyle;
     Endianess mFileDefaultEndianess;
     size_t mGlobalOffset = 0;
     size_t mRootNodeAddress = 0;
-		std::vector<size_t> mFinalAddressTable;
-
+    std::vector<size_t> mFinalAddressTable;
     std::map<size_t, std::string> mAddressReadMap;
+
+    
+    Style mStyle;
+
+    // Reading
+    std::vector<char> Data;
+    std::vector<bool> DataInfo;
+    size_t CurrentPosition = 0;
+    
+    // Writing
+    FILE* mFile = nullptr;
   };
 }
