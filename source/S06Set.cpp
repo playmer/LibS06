@@ -145,9 +145,9 @@ namespace LibS06 {
 
 		size_t parameter_address=0;
 
-		size_t name_1_address = file->ReadAddress(Endianess::Big);
+		size_t name_1_address = file->ReadAddress(Endianess::Big, __FILE__, __LINE__, __PRETTY_FUNCTION__);
 		size_t name_2_offset_address=file->GetCurrentAddress();
-		size_t name_2_address = file->ReadAddress(Endianess::Big);
+		size_t name_2_address = file->ReadAddress(Endianess::Big, __FILE__, __LINE__, __PRETTY_FUNCTION__);
 		unknown = file->Read<f32>(Endianess::Big);
 		file->OffsetAddress(12);
 		position = file->Read<glm::vec3>();
@@ -156,7 +156,7 @@ namespace LibS06 {
 		unsigned int parameter_total = file->Read<u32>(Endianess::Big);
 
 		if (parameter_total) {
-			parameter_address = file->ReadAddress(Endianess::Big);
+			parameter_address = file->ReadAddress(Endianess::Big, __FILE__, __LINE__, __PRETTY_FUNCTION__);
 		}
 
 		file->SetAddress(name_1_address);
@@ -226,10 +226,10 @@ namespace LibS06 {
 
 		size_t header_address=file->GetCurrentAddress();
 
-		size_t name_address = file->ReadAddress(Endianess::Big);
-		size_t type_address = file->ReadAddress(Endianess::Big);
+		size_t name_address = file->ReadAddress(Endianess::Big, __FILE__, __LINE__, __PRETTY_FUNCTION__);
+		size_t type_address = file->ReadAddress(Endianess::Big, __FILE__, __LINE__, __PRETTY_FUNCTION__);
 		unsigned int values_total = file->Read<u32>(Endianess::Big);
-		size_t values_address = file->ReadAddress(Endianess::Big);
+		size_t values_address = file->ReadAddress(Endianess::Big, __FILE__, __LINE__, __PRETTY_FUNCTION__);
 
 		file->SetAddress(name_address);
 		name = file->ReadNullTerminatedString();
@@ -304,7 +304,7 @@ namespace LibS06 {
 
 		file->SetRootNodeAddress(32);
 		unsigned int file_size = file->Read<u32>(Endianess::Big);
-		size_t banana_table_address = file->ReadAddress(Endianess::Big);
+		size_t banana_table_address = file->ReadAddress(Endianess::Big, __FILE__, __LINE__, __PRETTY_FUNCTION__);
 		table_size = file->Read<u32>(Endianess::Big);
 
 		file->SetAddress(44);
@@ -313,10 +313,10 @@ namespace LibS06 {
 		file->SetAddress(76);
 
 		unsigned int object_total = file->Read<u32>(Endianess::Big);
-		size_t object_address = file->ReadAddress(Endianess::Big);
+		size_t object_address = file->ReadAddress(Endianess::Big, __FILE__, __LINE__, __PRETTY_FUNCTION__);
 
 		unsigned int group_total = file->Read<u32>(Endianess::Big);
-		size_t group_address = file->ReadAddress(Endianess::Big);
+		size_t group_address = file->ReadAddress(Endianess::Big, __FILE__, __LINE__, __PRETTY_FUNCTION__);
 
 		for (size_t i=0; i<object_total; i++) {
 			file->SetAddress(object_address + i*64);

@@ -23,21 +23,21 @@ namespace LibS06 {
 	void SonicXNEffect::read(File *file) {
 		SonicXNSection::read(file);
 
-		size_t table_address = file->ReadAddressFileEndianess();
+		size_t table_address = file->ReadAddressFileEndianess(__FILE__, __LINE__, __PRETTY_FUNCTION__);
 		file->SetAddress(table_address+4);
 
 		unsigned int shader_count = file->Read<u32>();
-		size_t shader_address = file->ReadAddressFileEndianess();
+		size_t shader_address = file->ReadAddressFileEndianess(__FILE__, __LINE__, __PRETTY_FUNCTION__);
 
 		unsigned int name_count = file->Read<u32>();
-		size_t name_address = file->ReadAddressFileEndianess();
+		size_t name_address = file->ReadAddressFileEndianess(__FILE__, __LINE__, __PRETTY_FUNCTION__);
 
 		unsigned int extras_count = file->Read<u32>();
-		size_t extras_address = file->ReadAddressFileEndianess();
+		size_t extras_address = file->ReadAddressFileEndianess(__FILE__, __LINE__, __PRETTY_FUNCTION__);
 
 		for (size_t i=0; i<shader_count; i++) {
 			file->SetAddress(shader_address + i*8 + 4);
-			size_t string_address = file->ReadAddressFileEndianess();
+			size_t string_address = file->ReadAddressFileEndianess(__FILE__, __LINE__, __PRETTY_FUNCTION__);
 			file->SetAddress(string_address);
 			std::string shader = file->ReadNullTerminatedString();
 			material_shaders.push_back(shader);
@@ -47,7 +47,7 @@ namespace LibS06 {
 		for (size_t i=0; i<name_count; i++) {
 			file->SetAddress(name_address + i*12 + 4);
 			unsigned int index = file->Read<u32>();
-			size_t string_address = file->ReadAddress(big_endian);
+			size_t string_address = file->ReadAddress(big_endian, __FILE__, __LINE__, __PRETTY_FUNCTION__);
 			file->SetAddress(string_address);
 			std::string name = file->ReadNullTerminatedString();
 			material_indices.push_back(index);

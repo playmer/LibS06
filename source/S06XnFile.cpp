@@ -115,6 +115,40 @@ namespace LibS06 {
 			if (footer) name=footer->name;
 			object->setNames(name);
 		}
+
+		PrintOffsetTables(&file);
+	}
+
+	void SonicXNFile::PrintOffsetTables(File* aFile)
+	{
+		std::cout << "Root address: " << aFile->GetRootNodeAddress() << "\n\n";
+
+		std::cout << "File Offset table \n";
+		for (auto& address : offset_table->GetAddresses())
+		{
+			std::cout << address << "\n";
+		}
+
+		std::cout << "Read Offset table \n";
+		for (auto& [address, line] : aFile->GetAddressMap())
+		{
+			std::cout << address << ": " << line << "\n";
+		}
+		
+		std::cout << "Offsets we didn't read: \n";
+		for (auto& address : offset_table->GetAddresses())
+		{
+			if (aFile->GetAddressMap().count(address) == 0)
+				std::cout << address << "\n";
+		}
+
+		std::cout << "Offsets read but weren't in the offset table: \n";
+		for (auto& [address, line] : aFile->GetAddressMap())
+		{
+			auto it = std::find(offset_table->GetAddresses().begin(), offset_table->GetAddresses().end(), address);
+			if (it == offset_table->GetAddresses().end())
+				std::cout << address << ": " << line << "\n";
+		}
 	}
 
 	void SonicXNFile::setHeaders() {
@@ -222,7 +256,7 @@ namespace LibS06 {
 		SonicXNSection::read(file);
 
 		section_count = file->Read<u32>();
-		unsigned int file_root_address = file->ReadAddressFileEndianess();
+		unsigned int file_root_address = file->ReadAddressFileEndianess(__FILE__, __LINE__, __PRETTY_FUNCTION__);
 		file->SetRootNodeAddress(file_root_address);
 	}
 

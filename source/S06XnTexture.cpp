@@ -23,11 +23,11 @@ namespace LibS06 {
 	void SonicXNTexture::read(File *file) {
 		SonicXNSection::read(file);
 
-		size_t texture_table_info_address = file->ReadAddressFileEndianess();
+		size_t texture_table_info_address = file->ReadAddressFileEndianess(__FILE__, __LINE__, __PRETTY_FUNCTION__);
 		file->SetAddress(texture_table_info_address);
 
 		unsigned int texture_count = file->Read<u32>();
-		size_t texture_table_address = file->ReadAddressFileEndianess();
+		size_t texture_table_address = file->ReadAddressFileEndianess(__FILE__, __LINE__, __PRETTY_FUNCTION__);
 
 		for (size_t i=0; i<texture_count; i++) {
 			if (file_mode == MODE_YNO) {
@@ -35,7 +35,7 @@ namespace LibS06 {
 			}
 			else file->SetAddress(texture_table_address + i*20 + 4);
 
-			size_t name_address = file->ReadAddressFileEndianess();
+			size_t name_address = file->ReadAddressFileEndianess(__FILE__, __LINE__, __PRETTY_FUNCTION__);
 			unsigned int name_size = file->Read<u32>();
 
 			file->SetAddress(name_address);

@@ -23,7 +23,7 @@ namespace LibS06 {
 	void SonicXNObject::read(File *file) {
 		SonicXNSection::read(file);
 
-		size_t table_address  = file->ReadAddress(big_endian);
+		size_t table_address  = file->ReadAddress(big_endian, __FILE__, __LINE__, __PRETTY_FUNCTION__);
 		header_flag = file->Read<u32>();
 		file->SetAddress(table_address);
 
@@ -32,17 +32,17 @@ namespace LibS06 {
 		radius = file->Read<f32>();
 
 		unsigned int material_parts_count= file->Read<u32>();
-		size_t material_parts_address = file->ReadAddress(big_endian);
+		size_t material_parts_address = file->ReadAddress(big_endian,  __FILE__, __LINE__, __PRETTY_FUNCTION__);
 		unsigned int vertex_parts_count = file->Read<u32>();
-		size_t vertex_parts_address = file->ReadAddress(big_endian);
+		size_t vertex_parts_address = file->ReadAddress(big_endian, __FILE__, __LINE__, __PRETTY_FUNCTION__);
 		unsigned int index_parts_count= file->Read<u32>();
-		size_t index_parts_address = file->ReadAddress(big_endian);
+		size_t index_parts_address = file->ReadAddress(big_endian, __FILE__, __LINE__, __PRETTY_FUNCTION__);
 		unsigned int bone_parts_count = file->Read<u32>();
 		bone_max_depth = file->Read<u32>();
-		size_t bone_set_address = file->ReadAddress(big_endian);
+		size_t bone_set_address = file->ReadAddress(big_endian, __FILE__, __LINE__, __PRETTY_FUNCTION__);
 		bone_matrix_count= file->Read<u32>();
 		unsigned int mesh_count = file->Read<u32>();
-		size_t mesh_address = file->ReadAddress(big_endian);
+		size_t mesh_address = file->ReadAddress(big_endian, __FILE__, __LINE__, __PRETTY_FUNCTION__);
 		total_texture_count = file->Read<u32>();
 
 		if (file_mode == MODE_ZNO) {

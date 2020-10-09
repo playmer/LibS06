@@ -26,12 +26,12 @@ namespace LibS06 {
 		size_t table_address = 0;
 
 		table_count = file->Read<u32>();
-		table_address = file->ReadAddressFileEndianess();
+		table_address = file->ReadAddressFileEndianess(__FILE__, __LINE__, __PRETTY_FUNCTION__);
 
 		file->SetAddress(table_address);
 		flag = file->Read<u32>();
 
-		printf("Reading Index Table with flag %d at %d\n", flag, table_address);
+		printf("Reading Index Table with flag %d at %d\n", flag, (int)table_address);
 
 		// XNO and ZNO Index Table
 		unsigned int index_count=0;
@@ -40,8 +40,8 @@ namespace LibS06 {
 		size_t index_address=0;
 		index_count = file->Read<u32>();
 		index_morph_count = file->Read<u32>();
-		index_morph_address = file->ReadAddressFileEndianess();
-		index_address = file->ReadAddressFileEndianess();
+		index_morph_address = file->ReadAddressFileEndianess(__FILE__, __LINE__, __PRETTY_FUNCTION__);
+		index_address = file->ReadAddressFileEndianess(__FILE__, __LINE__, __PRETTY_FUNCTION__);
 
 		for (size_t i=0; i<index_morph_count; i++) {
 			file->SetAddress(index_morph_address + i*2);

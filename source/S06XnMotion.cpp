@@ -98,7 +98,7 @@ namespace LibS06 {
 
 		unsigned int element_count = file->Read<u32>();
 		element_size = file->Read<u32>();
-		size_t address = file->ReadAddressFileEndianess();
+		size_t address = file->ReadAddressFileEndianess(__FILE__, __LINE__, __PRETTY_FUNCTION__);
 
 		std::string type_str="UNKNOWN";
 		if (type ==      LIBS06_XNMOTION_TYPE_X_COORDINATE_LINEAR)      type_str  = "X Coordinate";
@@ -237,14 +237,14 @@ namespace LibS06 {
 
 	void SonicXNMotion::read(File *file) {
 		SonicXNSection::read(file);
-		size_t table_address = file->ReadAddressFileEndianess();
+		size_t table_address = file->ReadAddressFileEndianess(__FILE__, __LINE__, __PRETTY_FUNCTION__);
 		file->SetAddress(table_address);
 
 		flag = file->Read<u32>();
 		start_frame = file->Read<f32>();
 		end_frame = file->Read<f32>();
 		unsigned int motion_control_count = file->Read<u32>();
-		size_t motion_control_address = file->ReadAddressFileEndianess();
+		size_t motion_control_address = file->ReadAddressFileEndianess(__FILE__, __LINE__, __PRETTY_FUNCTION__);
 		fps = file->Read<f32>();
 
 		printf("Animation (%d) found with %f frames at %f FPS. Total MotionControls %d\n", flag, end_frame, fps, motion_control_count);

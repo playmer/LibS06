@@ -56,13 +56,13 @@ namespace LibS06 {
 
 	void SonicPolygonTable::read(File *file, bool big_endian) {
 		unsigned int table_count = file->Read<u32>();
-		size_t table_address = file->ReadAddressFileEndianess();
+		size_t table_address = file->ReadAddressFileEndianess(__FILE__, __LINE__, __PRETTY_FUNCTION__);
 
 		file->SetAddress(table_address);
 		flag = file->Read<u32>();
 
 		if (table_count == 4) {
-			size_t index_table_address = file->ReadAddressFileEndianess();
+			size_t index_table_address = file->ReadAddressFileEndianess(__FILE__, __LINE__, __PRETTY_FUNCTION__);
 			unsigned int index_table_size = file->Read<u32>();
 			file->SetAddress(index_table_address);
 
@@ -154,8 +154,8 @@ namespace LibS06 {
 
 			std::vector<unsigned short> strip_sizes;
 			unsigned int total_strips = file->Read<u32>();
-			size_t strips_address = file->ReadAddressFileEndianess();
-			size_t faces_address = file->ReadAddressFileEndianess();
+			size_t strips_address = file->ReadAddressFileEndianess(__FILE__, __LINE__, __PRETTY_FUNCTION__);
+			size_t faces_address = file->ReadAddressFileEndianess(__FILE__, __LINE__, __PRETTY_FUNCTION__);
 
 			for (size_t i=0; i<total_strips; i++) {
 				file->SetAddress(strips_address+i*2);

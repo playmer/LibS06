@@ -38,8 +38,8 @@ namespace LibS06 {
 		}
 
 		size_t header_address=file->GetCurrentAddress();
-		size_t id_address = file->ReadAddress(Endianess::Big);
-		size_t value_address = file->ReadAddress(Endianess::Big);
+		size_t id_address = file->ReadAddress(Endianess::Big, __FILE__, __LINE__, __PRETTY_FUNCTION__);
+		size_t value_address = file->ReadAddress(Endianess::Big, __FILE__, __LINE__, __PRETTY_FUNCTION__);
 
 		file->SetAddress(id_address);
 		id = file->ReadNullTerminatedString();
@@ -96,7 +96,7 @@ namespace LibS06 {
 
 		file->SetRootNodeAddress(32);
 		unsigned int file_size = file->Read<u32>(Endianess::Big);
-		size_t banana_table_address = file->ReadAddress(Endianess::Big);
+		size_t banana_table_address = file->ReadAddress(Endianess::Big, __FILE__, __LINE__, __PRETTY_FUNCTION__);
 		table_size = file->Read<u32>(Endianess::Big);
 
 		file->SetAddress(36);

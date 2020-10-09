@@ -23,7 +23,7 @@
 namespace LibS06 {
 	void SonicVertexResourceTable::read(File *file, XNFileMode file_mode, bool big_endian) {
 		unsigned int table_count = file->Read<u32>();
-		size_t table_address = file->ReadAddressFileEndianess();
+		size_t table_address = file->ReadAddressFileEndianess(__FILE__, __LINE__, __PRETTY_FUNCTION__);
 
 		if ((table_count != 1) && (table_count != 16)) {
 			printf("Unhandled Case Vertex Resource Table %d.\n", table_count);
@@ -36,31 +36,31 @@ namespace LibS06 {
 
 		unsigned short position_type_flag = file->Read<u16>();
 		unsigned short position_total = file->Read<u16>();
-		size_t position_address = file->ReadAddressFileEndianess();
+		size_t position_address = file->ReadAddressFileEndianess(__FILE__, __LINE__, __PRETTY_FUNCTION__);
 
 		unsigned short normal_type_flag = file->Read<u16>();
 		unsigned short normal_total = file->Read<u16>();
-		size_t normal_address = file->ReadAddressFileEndianess();
+		size_t normal_address = file->ReadAddressFileEndianess(__FILE__, __LINE__, __PRETTY_FUNCTION__);
 
 		unsigned short color_type_flag = file->Read<u32>();
 		unsigned short color_total = file->Read<u32>();
-		size_t color_address = file->ReadAddressFileEndianess();
+		size_t color_address = file->ReadAddressFileEndianess(__FILE__, __LINE__, __PRETTY_FUNCTION__);
 
 		unsigned short uv_type_flag = file->Read<u32>();
 		unsigned short uv_total = file->Read<u32>();
-		size_t uv_address = file->ReadAddressFileEndianess();
+		size_t uv_address = file->ReadAddressFileEndianess(__FILE__, __LINE__, __PRETTY_FUNCTION__);
 
 		unsigned short uv2_type_flag = file->Read<u32>();
 		unsigned short uv2_total = file->Read<u32>();
-		size_t uv2_address = file->ReadAddressFileEndianess();
+		size_t uv2_address = file->ReadAddressFileEndianess(__FILE__, __LINE__, __PRETTY_FUNCTION__);
 
 		unsigned short bones_type_flag = file->Read<u32>();
 		unsigned short bones_total = file->Read<u32>();
-		size_t bones_address = file->ReadAddressFileEndianess();
+		size_t bones_address = file->ReadAddressFileEndianess(__FILE__, __LINE__, __PRETTY_FUNCTION__);
 
 		unsigned short unknown_type_flag = file->Read<u32>();
 		unsigned short unknown_total = file->Read<u32>();
-		size_t unknown_address = file->ReadAddressFileEndianess();
+		size_t unknown_address = file->ReadAddressFileEndianess(__FILE__, __LINE__, __PRETTY_FUNCTION__);
 
 		Error::AddMessage(Error::LogType::LOG, "  Positions: " + ToString(position_total) + "(" + ToString(position_type_flag) + ")");
 		Error::AddMessage(Error::LogType::LOG, "  Normals  : " + ToString(normal_total)   + "(" + ToString(normal_type_flag) + ")");

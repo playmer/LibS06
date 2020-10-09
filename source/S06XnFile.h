@@ -1076,6 +1076,11 @@ namespace LibS06 {
 		protected:
 			std::vector<size_t> addresses;
 		public:
+			std::vector<size_t> const& GetAddresses()
+			{
+				return addresses;
+			}
+
 			SonicXNOffsetTable() {
 			}
 
@@ -1126,6 +1131,9 @@ namespace LibS06 {
 			std::string header_bones;
 			std::string header_object;
 			std::string header_motion;
+
+			
+			void PrintOffsetTables(File* aFile);
 		public:
 			SonicXNFile(std::string filename, XNFileMode file_mode_parameter=MODE_AUTODETECT);
 

@@ -63,7 +63,7 @@ namespace LibS06 {
 	void SonicMesh::read(File *file, bool big_endian, XNFileMode file_mode) {
 		flag = file->Read<u32>();
 		unsigned int submesh_count = file->Read<u32>();
-		size_t submesh_offset = file->ReadAddressFileEndianess();
+		size_t submesh_offset = file->ReadAddressFileEndianess(__FILE__, __LINE__, __PRETTY_FUNCTION__);
 		unsigned int extra_count = file->Read<u32>();
 		size_t extra_offset = file->Read<u32>();
 

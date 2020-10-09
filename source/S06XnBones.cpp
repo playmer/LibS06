@@ -23,17 +23,17 @@ namespace LibS06 {
 	void SonicXNBones::read(File *file) {
 		SonicXNSection::read(file);
 
-		size_t table_address = file->ReadAddressFileEndianess();
+		size_t table_address = file->ReadAddressFileEndianess(__FILE__, __LINE__, __PRETTY_FUNCTION__);
 		file->SetAddress(table_address+4);
 
 		unsigned int bones_count = file->Read<u32>();
-		size_t bones_address = file->ReadAddressFileEndianess();
+		size_t bones_address = file->ReadAddressFileEndianess(__FILE__, __LINE__, __PRETTY_FUNCTION__);
 
 		for (size_t i=0; i<bones_count; i++) {
 			file->SetAddress(bones_address + i*8);
 
 			unsigned int index = file->Read<u32>();
-			size_t name_address = file->ReadAddressFileEndianess();
+			size_t name_address = file->ReadAddressFileEndianess(__FILE__, __LINE__, __PRETTY_FUNCTION__);
 
 			file->SetAddress(name_address);
 			std::string name = file->ReadNullTerminatedString();

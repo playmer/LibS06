@@ -24,7 +24,7 @@ namespace LibS06 {
 	void SonicOldMaterialTable::read(File *file, XNFileMode file_mode, bool big_endian) {
 		unsigned short flag_1 = file->Read<u16>();
 		unsigned short flag_2 = file->Read<u16>();
-		size_t table_address = file->ReadAddressFileEndianess();
+		size_t table_address = file->ReadAddressFileEndianess(__FILE__, __LINE__, __PRETTY_FUNCTION__);
 
 		Error::AddMessage(Error::LogType::LOG, "Reading Old Material Type " + ToString(flag_1) + " at " + ToString(table_address) + " with flag " + ToString(flag_2));
 

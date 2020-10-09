@@ -78,13 +78,13 @@ namespace LibS06 {
 
 		file->SetAddress(32);
 
-		size_t geometry_address  = file->ReadAddress(Endianess::Big);
-		size_t mopp_code_address  = file->ReadAddress(Endianess::Big);
+		size_t geometry_address  = file->ReadAddress(Endianess::Big, __FILE__, __LINE__, __PRETTY_FUNCTION__);
+		size_t mopp_code_address  = file->ReadAddress(Endianess::Big, __FILE__, __LINE__, __PRETTY_FUNCTION__);
 
 		// Geometry
 		file->SetAddress(geometry_address);
-		size_t vertex_section_address = file->ReadAddress(Endianess::Big);
-		size_t face_section_address = file->ReadAddress(Endianess::Big);
+		size_t vertex_section_address = file->ReadAddress(Endianess::Big, __FILE__, __LINE__, __PRETTY_FUNCTION__);
+		size_t face_section_address = file->ReadAddress(Endianess::Big, __FILE__, __LINE__, __PRETTY_FUNCTION__);
 
 		// Vertices
 		file->SetAddress(vertex_section_address);

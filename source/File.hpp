@@ -5,6 +5,7 @@
 #include <array>
 #include <cstdint>
 #include <iostream>
+#include <map>
 #include <string>
 #include <type_traits>
 #include <vector>
@@ -14,6 +15,10 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp"
 #include "glm/common.hpp"
+
+#if defined(_MSC_VER) && !defined(__EDG__)
+  #define __PRETTY_FUNCTION__ __FUNCSIG__
+#endif
 
 namespace LibS06
 {
@@ -217,19 +222,36 @@ namespace LibS06
       return Read<glm::mat4>(mFileDefaultEndianess);
     }
 
-    size_t ReadAddress(Endianess aEndianess)
+
+    // __LINE__
+    void LogReadAddress(const char* aFileName, size_t aLineInFile, const char* aFunctionName)
     {
+      std::string line;
+      line += aFileName;
+      line += "(";
+      line += std::to_string(aLineInFile);
+      line += "): Address read in ";
+      line += aFunctionName;
+      line += " here.";
+      
+      mAddressReadMap.emplace(GetCurrentAddress() - mRootNodeAddress, line);
+    }
+
+    size_t ReadAddress(Endianess aEndianess, const char* aFileName, size_t aLineInFile, const char* aFunction)
+    {
+      LogReadAddress(aFileName, aLineInFile, aFunction);
+
       return Read<u32>(aEndianess) + mRootNodeAddress;
     }
 
-    size_t ReadAddress(bool aBigEndian)
+    size_t ReadAddress(bool aBigEndian, const char* aFileName, size_t aLineInFile, const char* aFunction)
     {
-      return ReadAddress(aBigEndian ? Endianess::Big : Endianess::Little);
+      return ReadAddress(aBigEndian ? Endianess::Big : Endianess::Little, aFileName, aLineInFile, aFunction);
     }
     
-    size_t ReadAddressFileEndianess()
+    size_t ReadAddressFileEndianess(const char* aFileName, size_t aLineInFile, const char* aFunction)
     {
-      return ReadAddress(mFileDefaultEndianess);
+      return ReadAddress(mFileDefaultEndianess, aFileName, aLineInFile, aFunction);
     }
 
     void WriteAddress(size_t aAddress, Endianess aEndianess)
@@ -568,7 +590,17 @@ namespace LibS06
 			current_address += difference;
 		}
   }
+  
 
+  std::map<size_t, std::string> const& GetAddressMap()
+  {
+    return mAddressReadMap;
+  }
+
+  size_t GetRootNodeAddress()
+  {
+    return mRootNodeAddress;
+  }
 
   private:
     template <typename tType>
@@ -593,5 +625,7 @@ namespace LibS06
     size_t mGlobalOffset = 0;
     size_t mRootNodeAddress = 0;
 		std::vector<size_t> mFinalAddressTable;
+
+    std::map<size_t, std::string> mAddressReadMap;
   };
 }

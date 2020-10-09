@@ -181,7 +181,7 @@ namespace LibS06 {
 
 	void SonicVertexTable::read(File *file, XNFileMode file_mode, bool big_endian) {
 		unsigned int table_count = file->Read<u32>();
-		size_t table_address = file->ReadAddressFileEndianess();
+		size_t table_address = file->ReadAddressFileEndianess(__FILE__, __LINE__, __PRETTY_FUNCTION__);
 
 		if (table_count > 1) {
 			printf("Unhandled Case Vertex Table %d.\n", table_count);
@@ -194,12 +194,12 @@ namespace LibS06 {
 		flag_2 = file->Read<u32>();
 		vertex_size = file->Read<u32>();
 		unsigned int vertex_count = file->Read<u32>();
-		size_t vertex_offset = file->ReadAddressFileEndianess();
+		size_t vertex_offset = file->ReadAddressFileEndianess(__FILE__, __LINE__, __PRETTY_FUNCTION__);
 
 		unsigned int bone_table_count= file->Read<u32>();
-		size_t bone_table_offset = file->ReadAddressFileEndianess();
+		size_t bone_table_offset = file->ReadAddressFileEndianess(__FILE__, __LINE__, __PRETTY_FUNCTION__);
 
-		printf("%d %d %d\n", vertex_size, vertex_offset, bone_table_count);
+		printf("%d %d %d\n", vertex_size, (int)vertex_offset, bone_table_count);
 		printf("Flags: %d %d\n", flag_1, flag_2);
 
 		Error::AddMessage(Error::LogType::LOG, "Vertex Size / Vertex Flag 1 / Vertex Flag 2: " + ToString(vertex_size) + " / " + ToString(flag_1) + " / " + ToString(flag_2));

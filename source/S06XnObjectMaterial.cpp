@@ -132,7 +132,7 @@ namespace LibS06 {
 		if (file_mode == MODE_ENO) return;
 
 		count = file->Read<u32>();
-		table_address = file->ReadAddress(big_endian);
+		table_address = file->ReadAddress(big_endian, __FILE__, __LINE__, __PRETTY_FUNCTION__);
 		file->SetAddress(table_address);
 
 		data_block_1_length = 20;
@@ -144,15 +144,15 @@ namespace LibS06 {
 
 		flag_table = file->Read<u32>();
 		user_flag = file->Read<u32>();
-		data_1_offset = file->ReadAddress(big_endian);
-		data_2_offset = file->ReadAddress(big_endian);
+		data_1_offset = file->ReadAddress(big_endian, __FILE__, __LINE__, __PRETTY_FUNCTION__);
+		data_2_offset = file->ReadAddress(big_endian, __FILE__, __LINE__, __PRETTY_FUNCTION__);
 		
 		unsigned int texture_unit_zno_count=0;
 		if (file_mode == MODE_ZNO) {
 			texture_unit_flag = file->Read<u32>();
 			texture_unit_zno_count = file->Read<u32>();
 		}
-		file->ReadAddress(texture_units_offset);
+		file->ReadAddress(texture_units_offset, __FILE__, __LINE__, __PRETTY_FUNCTION__);
 		if (file_mode == MODE_ZNO) {
 			texture_unit_flag_2 = file->Read<u32>();
 		}
