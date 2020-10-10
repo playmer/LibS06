@@ -185,7 +185,7 @@ void ShowTracingInfo(FileTracingContext& aContext)
     TracingValueClicked);
   
 
-  if (ImGui::IsWindowHovered() && ImGui::IsMouseDragging(ImGuiMouseButton_Middle))
+  if (ImGui::IsWindowHovered() && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
   {
     ImVec2 offset(0.0f, 0.0f);
 
@@ -317,26 +317,9 @@ int main(int, char**)
   
   while (context.Update())
   {
-    // Set up invisible Dockspace window.
-    auto io = ImGui::GetIO();
-    ImGui::SetNextWindowPos(ImVec2(0, 0));
-    auto displaySize = ImVec2{ io.DisplaySize.x, io.DisplaySize.y};
-    ImGui::SetNextWindowSize(displaySize);
-    ImGui::Begin(
-        "FullScreenDockWindow",
-        nullptr, 
-        ImGuiWindowFlags_NoTitleBar |
-        ImGuiWindowFlags_NoResize |
-        ImGuiWindowFlags_NoBackground |
-        ImGuiWindowFlags_NoScrollbar |
-        ImGuiWindowFlags_NoMove |
-        //ImGuiWindowFlags_NoInputs |
-        //ImGuiWindowFlags_NoSavedSettings |
-        ImGuiWindowFlags_NoFocusOnAppearing|
-        ImGuiWindowFlags_NoBringToFrontOnFocus
-    );
+    ImGui::DockSpaceOverViewport();
 
-    if (ImGui::Begin("MainWindow"), nullptr, ImGuiWindowFlags_NoCollapse)
+    if (ImGui::Begin("MainWindow", nullptr, ImGuiWindowFlags_NoCollapse))
     {
       ImGui::InputText("File", &fileContext.fileName);
       ImGui::InputInt("PositionToBreakOn", &LibS06::gPositionToBreakOn);
@@ -374,8 +357,6 @@ int main(int, char**)
 
       ImGui::End();
     }
-    
-    ImGui::End();
   }
   
   return 0;
