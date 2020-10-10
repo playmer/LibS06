@@ -1115,7 +1115,7 @@ namespace LibS06 {
 	};
 
 	class SonicXNFile {
-		protected:
+		public:
 			SonicXNInfo *info;
 			SonicXNOffsetTable *offset_table;
 			SonicXNFooter *footer;

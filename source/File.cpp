@@ -41,22 +41,51 @@ namespace LibS06
     }
   }
 
-  void File::LogReadAddress(const char* aFileName, size_t aLineInFile, const char* aFunctionName)
+  void File::GetRangesRead()
   {
-    std::string line;
-    line += aFileName;
-    line += "(";
-    line += std::to_string(aLineInFile);
-    line += "): Address read in ";
-    line += aFunctionName;
-    line += " here.";
-      
-    mAddressReadMap.emplace(GetCurrentAddress() - mRootNodeAddress, line);
+    std::map<std::string, glm::ivec2> bytesReadPerFunction;
+
+    for (auto [address, data] : mAddressReadMap)
+    {
+
+    }
+  }
+
+  void File::LogRead(const char* aFileName, size_t aLineInFile, const char* aFunctionName, size_t aBytesRead)
+  {
+    if (false == mHasRootNodeAddressBeenSet)
+      return;
+    
+    size_t offsetToLog = GetCurrentAddress() - mRootNodeAddress;
+    
+    if ((-1 != gPositionToBreakOn) && (offsetToLog == gPositionToBreakOn)) __debugbreak();
+
+    mReadMap.emplace(GetCurrentAddress() - mRootNodeAddress, AddressReadData{aFileName, aFunctionName, aLineInFile, 4});
+  }
+
+  void File::LogReadAddress(const char* aFileName, size_t aLineInFile, const char* aFunctionName, size_t aBytesRead)
+  {
+    if (false == mHasRootNodeAddressBeenSet)
+      return;
+
+    //std::string line;
+    //line += aFileName;
+    //line += "(";
+    //line += std::to_string(aLineInFile);
+    //line += "): Address read in ";
+    //line += aFunctionName;
+    //line += " here.";
+    
+    size_t offsetToLog = GetCurrentAddress() - mRootNodeAddress;
+    
+    if ((-1 != gAddressToBreakOn) && (offsetToLog == gAddressToBreakOn)) __debugbreak();
+
+    mAddressReadMap.emplace(GetCurrentAddress() - mRootNodeAddress, AddressReadData{aFileName, aFunctionName, aLineInFile, 4});
   }
 
   size_t File::ReadAddress(Endianess aEndianess, const char* aFileName, size_t aLineInFile, const char* aFunction)
   {
-    LogReadAddress(aFileName, aLineInFile, aFunction);
+    LogReadAddress(aFileName, aLineInFile, aFunction, 4);
 
     return Read<u32>(aEndianess) + mRootNodeAddress;
   }
@@ -271,6 +300,7 @@ namespace LibS06
 
   void File::SetRootNodeAddress(size_t aRootNodeAddress)
   {
+    mHasRootNodeAddressBeenSet = true;
     mRootNodeAddress = aRootNodeAddress;
   }
 
@@ -345,7 +375,7 @@ namespace LibS06
     }
   }
   
-  std::map<size_t, std::string> const& File::GetAddressMap()
+  std::map<size_t, File::AddressReadData> const& File::GetAddressMap()
   {
     return mAddressReadMap;
   }

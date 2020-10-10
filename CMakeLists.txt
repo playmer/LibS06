@@ -9,7 +9,11 @@ set(AssetDirectory ${RepoDirectory}/Assets)
 add_subdirectory(dependencies)
 add_subdirectory(source)
 
-add_executable(LibS06_TestProgram main.cpp)
+add_executable(LibS06_TestProgram 
+    main.cpp
+    imgui_widget_flamegraph.cpp
+    imgui_widget_flamegraph.h
+)
 
 target_include_directories(LibS06_TestProgram 
 PRIVATE 

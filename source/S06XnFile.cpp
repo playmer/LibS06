@@ -128,11 +128,20 @@ namespace LibS06 {
 		{
 			std::cout << address << "\n";
 		}
-
+		
+    std::string line;
 		std::cout << "Read Offset table \n";
-		for (auto& [address, line] : aFile->GetAddressMap())
+		for (auto& [address, data] : aFile->GetAddressMap())
 		{
+      line += data.File;
+      line += "(";
+      line += std::to_string(data.Line);
+      line += "): Address read in ";
+      line += data.Function;
+      line += " here.";
+
 			std::cout << address << ": " << line << "\n";
+			line.clear();
 		}
 		
 		std::cout << "Offsets we didn't read: \n";
@@ -143,11 +152,20 @@ namespace LibS06 {
 		}
 
 		std::cout << "Offsets read but weren't in the offset table: \n";
-		for (auto& [address, line] : aFile->GetAddressMap())
+		for (auto& [address, data] : aFile->GetAddressMap())
 		{
 			auto it = std::find(offset_table->GetAddresses().begin(), offset_table->GetAddresses().end(), address);
 			if (it == offset_table->GetAddresses().end())
+			{
+				line += data.File;
+				line += "(";
+				line += std::to_string(data.Line);
+				line += "): Address read in ";
+				line += data.Function;
+				line += " here.";
 				std::cout << address << ": " << line << "\n";
+				line.clear();
+			}
 		}
 	}
 

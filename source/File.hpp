@@ -22,6 +22,9 @@
 
 namespace LibS06
 {
+  inline int gPositionToBreakOn = -1;
+  inline int gAddressToBreakOn = -1;
+
   using i8 = char;
   using i16 = std::int16_t;
   using i32 = std::int32_t;
@@ -73,6 +76,14 @@ namespace LibS06
   class File
   {
   public:
+    struct AddressReadData
+    {
+      char const* File;
+      char const* Function;
+      size_t Line;
+      size_t BytesRead;
+    };
+
     enum class Style
     {
       Read,
@@ -207,8 +218,9 @@ namespace LibS06
     {
       return Read<glm::mat4>(mFileDefaultEndianess);
     }
-
-    void LogReadAddress(const char* aFileName, size_t aLineInFile, const char* aFunctionName);
+    
+    void LogRead(const char* aFileName, size_t aLineInFile, const char* aFunctionName, size_t aBytesRead);
+    void LogReadAddress(const char* aFileName, size_t aLineInFile, const char* aFunctionName, size_t aBytesRead);
     size_t ReadAddress(Endianess aEndianess, const char* aFileName, size_t aLineInFile, const char* aFunction);
     size_t ReadAddress(bool aBigEndian, const char* aFileName, size_t aLineInFile, const char* aFunction);
     size_t ReadAddressFileEndianess(const char* aFileName, size_t aLineInFile, const char* aFunction);
@@ -313,7 +325,7 @@ namespace LibS06
     void ReadAddressTableBBIN(u32 aTableSize);
     void WriteAddressTableBBIN(size_t negativeOffset = 0);
 
-    std::map<size_t, std::string> const& GetAddressMap();
+    std::map<size_t, AddressReadData> const& GetAddressMap();
     size_t GetRootNodeAddress();
     
     std::vector<char>& GetData()
@@ -341,6 +353,8 @@ namespace LibS06
 
       assert(value == value2);
 
+      if ((-1 != gPositionToBreakOn) && (CurrentPosition == gPositionToBreakOn)) __debugbreak();
+
       CurrentPosition += sizeof(tType);
 
       return value;
@@ -358,7 +372,10 @@ namespace LibS06
     size_t mGlobalOffset = 0;
     size_t mRootNodeAddress = 0;
     std::vector<size_t> mFinalAddressTable;
-    std::map<size_t, std::string> mAddressReadMap;
+
+    std::map<size_t, AddressReadData> mAddressReadMap;
+    std::map<size_t, AddressReadData> mReadMap;
+    void GetRangesRead();
 
     
     Style mStyle;
@@ -367,6 +384,7 @@ namespace LibS06
     std::vector<char> Data;
     std::vector<bool> DataInfo;
     size_t CurrentPosition = 0;
+    bool mHasRootNodeAddressBeenSet = false;
     
     // Writing
     FILE* mFile = nullptr;
