@@ -22,6 +22,8 @@
 
 namespace LibS06 {
 	void SonicIndexTable::read(File *file, bool big_endian) {
+		auto startAddress = file->GetCurrentAddress();
+
 		unsigned int table_count = 0;
 		size_t table_address = 0;
 
@@ -87,6 +89,8 @@ namespace LibS06 {
 
 			additional_index += strip_sizes[m];
 		}
+		
+		file->AddLabel("SonicXNIndexTable", startAddress, file->GetCurrentAddress());
 	}
 
 	

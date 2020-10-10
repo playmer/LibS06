@@ -18,6 +18,8 @@
 //=========================================================================
 
 #include <algorithm>
+#include <vector>
+
 #include "S06XnFile.h"
 
 namespace LibS06 {
@@ -180,6 +182,8 @@ namespace LibS06 {
 	}
 
 	void SonicVertexTable::read(File *file, XNFileMode file_mode, bool big_endian) {
+		std::vector<std::pair<size_t, size_t>> vertexLabels;
+		auto startAddress = file->GetCurrentAddress();
 		unsigned int table_count = file->Read<u32>();
 		size_t table_address = file->ReadAddressFileEndianess(__FILE__, __LINE__, __PRETTY_FUNCTION__);
 
@@ -221,13 +225,17 @@ namespace LibS06 {
 		Error::AddMessage(Error::LogType::LOG, "Vertex Table with a bone blending table of size " + ToString(bone_table.size()));
 
 		for (size_t i=0; i<vertex_count; i++) {
-			file->SetAddress(vertex_offset + i * vertex_size);
+			auto vertexAddress = vertex_offset + i * vertex_size;
+			file->SetAddress(vertexAddress);
 			SonicVertex *vertex = new SonicVertex();
 			vertex->read(file, vertex_size, big_endian, flag_1, file_mode);
 			vertices.push_back(vertex);
+			vertexLabels.emplace_back(vertexAddress, file->GetCurrentAddress());
 		}
 
 		printf("Done reading vertices...\n");
+		
+		file->AddLabel("SonicXNVertex", startAddress, file->GetCurrentAddress());
 	}
 
 	void SonicVertexTable::writeVertices(File *file, XNFileMode file_mode) {

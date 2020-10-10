@@ -237,8 +237,8 @@ namespace LibS06 {
 			return;
 		}
 		
-		head_address = file->GetCurrentAddress()-4;
-		section_size = file->Read<u32>();
+		head_address = file->GetCurrentAddress();
+		section_size = file->Read<u32>() + 4;  // + 4 because the SonicXNSection isn't counted in the size of the inheritor.
 	}
 
 	void SonicXNSection::write(File *file) {
@@ -266,7 +266,7 @@ namespace LibS06 {
 
 
 	void SonicXNSection::goToEnd(File *file) {
-		file->SetAddress(head_address + section_size + 8);
+		file->SetAddress(head_address + section_size);
 	}
 
 

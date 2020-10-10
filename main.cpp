@@ -15,73 +15,12 @@
 #include "imgui_stdlib.h"
 
 
-
-struct TracingInfo
+struct FileTracingContext
 {
-  TracingInfo(char const* aName, size_t aStartInBytes, size_t aEndInBytes)
-  {
-    Name = aName;
-    StartInBytes = aStartInBytes;
-    EndInBytes = aEndInBytes;
-  }
-  
-  TracingInfo(char const* aName, LibS06::SonicXNSection* aSection)
-  {
-    Name = aName;
-    StartInBytes = aSection->getAddress();
-    EndInBytes = aSection->getAddress() + aSection->getSectionSize();
-  }
-
-  char const* Name;
-  size_t StartInBytes;
-  size_t EndInBytes;
-  size_t Depth;
-
-  std::vector<std::unique_ptr<TracingInfo>> Children;
-
-  void Sort()
-  {
-    std::sort(Children.begin(), Children.end(), [](std::unique_ptr<TracingInfo> const& left, std::unique_ptr<TracingInfo> const& right)
-    {
-      return left->StartInBytes < right->StartInBytes;
-    });
-
-    for (auto& child : Children)
-      Sort();
-  }
-
-  void CalculateDepth(size_t aStart = 0)
-  {
-    Depth = aStart;
-    
-    for (auto& child : Children)
-      child->CalculateDepth(Depth + 1);
-  }
-
-  std::vector<TracingInfo*> Flatten()
-  {
-    std::vector<TracingInfo*> toReturn;
-    toReturn.push_back(this);
-
-    for (auto& child : Children)
-      child->Flatten(toReturn);
-
-    return toReturn;
-  }
-
-  size_t Range()
-  {
-    return EndInBytes - StartInBytes;
-  }
-  
-private:
-  void Flatten(std::vector<TracingInfo*>& aOut)
-  {
-    aOut.push_back(this);
-
-    for (auto& child : Children)
-      child->Flatten(aOut);
-  }
+  MemoryEditor memoryEditor;
+  std::unique_ptr<LibS06::TracingInfo> tracingInfoRoot;
+  std::vector<LibS06::TracingInfo*> tracingInfosFlattened;
+  std::string fileName = "F:/Roms/Xbox360/Sonic the Hedgehog/Arcs/player_sonic/win32/player/sonic_new/so_itm_sbungle_L.xno";
 };
 
 
@@ -96,22 +35,20 @@ private:
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-std::unique_ptr<TracingInfo> GetTracingInfo(LibS06::SonicXNFile* aFile)
+std::unique_ptr<LibS06::TracingInfo> FromSection(char const* aName, LibS06::SonicXNSection* aSection)
 {
-  std::unique_ptr<TracingInfo> root = std::make_unique<TracingInfo>("Whole File", 0, aFile->GetReadFile()->GetData().size());
+  return std::make_unique<LibS06::TracingInfo>(
+    aName,
+    aSection->getAddress(),
+    aSection->getAddress() + aSection->getSectionSize());
+}
 
-  root->Children.emplace_back(std::make_unique<TracingInfo>("SonicXNInfo", aFile->info->getAddress(), aFile->info->getAddress() + aFile->info->getSectionSize()));
+
+std::unique_ptr<LibS06::TracingInfo> GetTracingInfo(LibS06::SonicXNFile* aFile)
+{
+  std::unique_ptr<LibS06::TracingInfo> root = std::make_unique<LibS06::TracingInfo>("Whole File", 0, aFile->GetReadFile()->GetData().size());
+
+  root->Children.emplace_back(FromSection("SonicXNInfo", aFile->info));
 
   for (auto& unknownSection : aFile->sections)
   {
@@ -119,40 +56,52 @@ std::unique_ptr<TracingInfo> GetTracingInfo(LibS06::SonicXNFile* aFile)
     char const* sectionName = nullptr;
     if (unknownSection->getHeader() == aFile->header_texture) {
       section = static_cast<LibS06::SonicXNTexture*>(unknownSection);
-      root->Children.emplace_back(std::make_unique<TracingInfo>("SonicXNTexture", section));
+      root->Children.emplace_back(FromSection("SonicXNTexture", section));
     }
     else if (unknownSection->getHeader() == aFile->header_effect) {
       section = static_cast<LibS06::SonicXNEffect*>(unknownSection);
-      root->Children.emplace_back(std::make_unique<TracingInfo>("SonicXNEffect", section));
+      root->Children.emplace_back(FromSection("SonicXNEffect", section));
     }
     else if (unknownSection->getHeader() == aFile->header_bones) {
       section = static_cast<LibS06::SonicXNBones*>(unknownSection);
-      root->Children.emplace_back(std::make_unique<TracingInfo>("SonicXNBones", section));
+      root->Children.emplace_back(FromSection("SonicXNBones", section));
     }
     else if (unknownSection->getHeader() == aFile->header_object) {
       section = static_cast<LibS06::SonicXNObject*>(unknownSection);
-      root->Children.emplace_back(std::make_unique<TracingInfo>("SonicXNObject", section));
+      root->Children.emplace_back(FromSection("SonicXNObject", section));
     }
     else if (unknownSection->getHeader() == aFile->header_motion) {
       section = static_cast<LibS06::SonicXNMotion*>(unknownSection);
-      root->Children.emplace_back(std::make_unique<TracingInfo>("SonicXNMotion", section));
+      root->Children.emplace_back(FromSection("SonicXNMotion", section));
     }
   }
 
-  root->Children.emplace_back(std::make_unique<TracingInfo>("SonicXNOffsetTable", aFile->offset_table));
-  root->Children.emplace_back(std::make_unique<TracingInfo>("SonicXNFooter", aFile->footer));
-  root->Children.emplace_back(std::make_unique<TracingInfo>("SonicXNEnd", aFile->end));
+  root->Children.emplace_back(FromSection("SonicXNOffsetTable", aFile->offset_table));
+  root->Children.emplace_back(FromSection("SonicXNFooter", aFile->footer));
+  root->Children.emplace_back(FromSection("SonicXNEnd", aFile->end));
+
+  root->Place(aFile->GetReadFile());
+  root->Sort();
+  root->CalculateDepth();
 
   return root;
 }
 
 
 
+void TracingValueClicked(void* data, int idx)
+{
+  auto context = reinterpret_cast<FileTracingContext*>(data);
+  auto info = context->tracingInfosFlattened[idx];
 
+  context->memoryEditor.GotoAddrAndHighlight(info->StartInBytes, info->EndInBytes);
+}
 
 void TracingValuesGetter(float* start, float* end, ImU8* level, const char** caption, const void* data, int idx)
 {
-  auto info = *(reinterpret_cast<TracingInfo*const*>(data) + idx);
+  auto context = reinterpret_cast<FileTracingContext const*>(data);
+  auto info = context->tracingInfosFlattened[idx];
+
   if (start)
   {
     *start = (float)info->StartInBytes;
@@ -167,69 +116,76 @@ void TracingValuesGetter(float* start, float* end, ImU8* level, const char** cap
   }
   if (caption)
   {
-    *caption = info->Name;
+    *caption = info->Name.c_str();
   }
 }
 
-void ShowTracingInfo(TracingInfo* aTracingInfoRoot, std::vector<TracingInfo*>& aTracingInfosFlattened, std::string& fileName)
+void ShowTracingInfo(FileTracingContext& aContext)
 {
-  static TracingInfo* tracingInfoRootLast = nullptr;
+  static LibS06::TracingInfo* tracingInfoRootLast = nullptr;
   static double zoom = 1.0f;
   const double zoomSpeed = 1.15f;
 
-  if (tracingInfoRootLast != aTracingInfoRoot)
+  if (tracingInfoRootLast != aContext.tracingInfoRoot.get())
   {
-    zoom = ImGui::GetWindowSize().x / aTracingInfoRoot->EndInBytes;
-    tracingInfoRootLast = aTracingInfoRoot;
+    zoom = ImGui::GetWindowSize().x / aContext.tracingInfoRoot->EndInBytes;
+    tracingInfoRootLast = aContext.tracingInfoRoot.get();
   }
 
   double lastZoom = zoom;
-
   float wheel = ImGui::GetIO().MouseWheel;
-  if (0.0f > wheel)
-  {
-    zoom /= zoomSpeed;
-  }
-  else if (0.0f < wheel)
-  {
-    zoom *= zoomSpeed;
-  }
 
-  ImGui::Begin("File Layout");
+  ImGui::Begin("File Layout", nullptr, ImGuiWindowFlags_NoCollapse);
 
-  ImGui::BeginChild("scrolling", ImVec2(0.0f, 0.0f), true, ImGuiWindowFlags_HorizontalScrollbar);
+  ImGui::BeginChild("scrolling", ImVec2(0.0f, 0.0f), true, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_HorizontalScrollbar);
+
+  if (ImGui::IsWindowHovered())
+  {
+    if (0.0f > wheel)
+    {
+      zoom /= zoomSpeed;
+    }
+    else if (0.0f < wheel)
+    {
+      zoom *= zoomSpeed;
+    }
+  }
   
   {
     static float lastScrollMax = ImGui::GetScrollMaxX();
-    float currentScrollMax = ImGui::GetScrollMaxX();
     static float lastScroll = ImGui::GetScrollX();
-    float currentScroll = ImGui::GetScrollX();
-    float ratio = lastScroll / lastScrollMax;
-    float scroll = ratio * currentScrollMax;
+    const float currentScrollMax = ImGui::GetScrollMaxX();
+    const float currentScroll = ImGui::GetScrollX();
+    const float ratio = lastScroll / lastScrollMax;
+    const float scroll = ratio * currentScrollMax;
 
     if (lastScrollMax != currentScrollMax)
     {
       ImGui::SetScrollX(scroll);
-      currentScroll = scroll;
+      lastScroll = scroll;
+    }
+    else
+    {
+      lastScroll = currentScroll;
     }
   
     lastScrollMax = currentScrollMax;
-    lastScroll = currentScroll;
   }
   
   ImGuiWidgetFlameGraph::PlotFlame(
     "Sonic 06 File", 
     TracingValuesGetter, 
-    aTracingInfosFlattened.data(), 
-    aTracingInfosFlattened.size(), 
+    &aContext,
+    aContext.tracingInfosFlattened.size(),
     0, 
-    fileName.c_str(), 
+    aContext.fileName.c_str(), 
     0.f,
-    aTracingInfoRoot->EndInBytes,
-    ImVec2(aTracingInfoRoot->EndInBytes * zoom, 0.0f));
+    aContext.tracingInfoRoot->EndInBytes,
+    ImVec2(aContext.tracingInfoRoot->EndInBytes * zoom, 0.0f),
+    TracingValueClicked);
   
 
-  if (ImGui::IsWindowFocused() && ImGui::IsMouseDragging(ImGuiMouseButton_Middle))
+  if (ImGui::IsWindowHovered() && ImGui::IsMouseDragging(ImGuiMouseButton_Middle))
   {
     ImVec2 offset(0.0f, 0.0f);
 
@@ -353,43 +309,56 @@ int main(int, char**)
   SOIS::ImGuiSample sample;
 
   std::unique_ptr<LibS06::SonicXNFile> sonic06File;
+  FileTracingContext fileContext;
 
-  MemoryEditor memoryEditor;
+  fileContext.memoryEditor.HighlightFn = HighlightBytes;
+  fileContext.memoryEditor.HighlightColor = ImColor(204, 153, 0);
 
-  memoryEditor.HighlightFn = HighlightBytes;
-  memoryEditor.HighlightColor = ImColor(204, 153, 0);
-
-  std::unique_ptr<TracingInfo> tracingInfoRoot;
-  std::vector<TracingInfo*> tracingInfosFlattened;
-
-  std::string fileName = "F:/Roms/Xbox360/Sonic the Hedgehog/Arcs/player_sonic/win32/player/sonic_new/so_itm_sbungle_L.xno";
   
   while (context.Update())
   {
-    if (ImGui::Begin("MainWindow"))
+    // Set up invisible Dockspace window.
+    auto io = ImGui::GetIO();
+    ImGui::SetNextWindowPos(ImVec2(0, 0));
+    auto displaySize = ImVec2{ io.DisplaySize.x, io.DisplaySize.y};
+    ImGui::SetNextWindowSize(displaySize);
+    ImGui::Begin(
+        "FullScreenDockWindow",
+        nullptr, 
+        ImGuiWindowFlags_NoTitleBar |
+        ImGuiWindowFlags_NoResize |
+        ImGuiWindowFlags_NoBackground |
+        ImGuiWindowFlags_NoScrollbar |
+        ImGuiWindowFlags_NoMove |
+        //ImGuiWindowFlags_NoInputs |
+        //ImGuiWindowFlags_NoSavedSettings |
+        ImGuiWindowFlags_NoFocusOnAppearing|
+        ImGuiWindowFlags_NoBringToFrontOnFocus
+    );
+
+    if (ImGui::Begin("MainWindow"), nullptr, ImGuiWindowFlags_NoCollapse)
     {
-      ImGui::InputText("File", &fileName);
+      ImGui::InputText("File", &fileContext.fileName);
       ImGui::InputInt("PositionToBreakOn", &LibS06::gPositionToBreakOn);
       ImGui::InputInt("AddressToBreakOn", &LibS06::gAddressToBreakOn);
 
       bool open = ImGui::Button("Open File");
-      bool reload = fileName.size() != 0 ? ImGui::Button("Reload File") : false;
+      bool reload = fileContext.fileName.size() != 0 ? ImGui::Button("Reload File") : false;
 
       if (open)
       {
         nfdchar_t* outPath;
         NFD_OpenDialog("xno", "", &outPath);
-        fileName = outPath;
+        fileContext.fileName = outPath;
         free(outPath);
       }
 
       if (open || reload)
       {
-        sonic06File = std::make_unique<LibS06::SonicXNFile>(fileName);
-        memoryEditor.userData = sonic06File.get();
-        tracingInfoRoot = GetTracingInfo(sonic06File.get());
-        tracingInfoRoot->CalculateDepth();
-        tracingInfosFlattened = tracingInfoRoot->Flatten();
+        sonic06File = std::make_unique<LibS06::SonicXNFile>(fileContext.fileName);
+        fileContext.memoryEditor.userData = sonic06File.get();
+        fileContext.tracingInfoRoot = GetTracingInfo(sonic06File.get());
+        fileContext.tracingInfosFlattened = fileContext.tracingInfoRoot->Flatten();
       }
 
       if (sonic06File)
@@ -398,13 +367,15 @@ int main(int, char**)
 
         auto& data = sonic06File->GetReadFile()->GetData();
         
-        memoryEditor.DrawWindow("Memory Editor", data.data(), data.size());
+        fileContext.memoryEditor.DrawWindow("Memory Editor", data.data(), data.size());
 
-        ShowTracingInfo(tracingInfoRoot.get(), tracingInfosFlattened, fileName);
+        ShowTracingInfo(fileContext);
       }
 
       ImGui::End();
     }
+    
+    ImGui::End();
   }
   
   return 0;

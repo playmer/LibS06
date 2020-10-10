@@ -44,6 +44,47 @@ namespace LibS06
     Big = 1
   };
 
+  class File;
+
+  struct TracingInfo
+  {
+    TracingInfo(char const* aName, size_t aStartInBytes, size_t aEndInBytes)
+    {
+      Name = aName;
+      StartInBytes = aStartInBytes;
+      EndInBytes = aEndInBytes;
+    }
+
+    std::string Name;
+    size_t StartInBytes;
+    size_t EndInBytes;
+    size_t Depth;
+
+    std::vector<std::unique_ptr<TracingInfo>> Children;
+
+    void Place(std::unique_ptr<TracingInfo> aInfo);
+    void Place(File* aFile);
+
+    void Sort();
+
+    void CalculateDepth(size_t aStart = 0);
+    std::vector<TracingInfo*> Flatten();
+
+    size_t Range()
+    {
+      return EndInBytes - StartInBytes;
+    }
+  
+  private:
+    void Flatten(std::vector<TracingInfo*>& aOut)
+    {
+      aOut.push_back(this);
+
+      for (auto& child : Children)
+        child->Flatten(aOut);
+    }
+  };
+
   inline bool IsBigEndian(void)
   {
       union {
@@ -338,6 +379,21 @@ namespace LibS06
       return DataInfo;
     }
 
+    void AddLabel(char const* aName, size_t aStartInBytes, size_t aEndInBytes)
+    {
+      mTracingInfos.emplace_back(std::make_unique<TracingInfo>(aName, aStartInBytes, aEndInBytes));
+    }
+
+    std::vector<std::unique_ptr<TracingInfo>>& GetTracingInfos()
+    {
+      return mTracingInfos;
+    }
+
+    size_t GetGlobalOffset()
+    {
+      return mGlobalOffset;
+    }
+
   private:
     template <typename tType>
     tType ReadData()
@@ -373,6 +429,7 @@ namespace LibS06
     size_t mRootNodeAddress = 0;
     std::vector<size_t> mFinalAddressTable;
 
+    std::vector<std::unique_ptr<TracingInfo>> mTracingInfos;
     std::map<size_t, AddressReadData> mAddressReadMap;
     std::map<size_t, AddressReadData> mReadMap;
     void GetRangesRead();

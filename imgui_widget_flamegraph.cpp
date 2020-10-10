@@ -28,7 +28,7 @@
 #endif
 #include "imgui_internal.h"
 
-void ImGuiWidgetFlameGraph::PlotFlame(const char* label, void (*values_getter)(float* start, float* end, ImU8* level, const char** caption, const void* data, int idx), const void* data, int values_count, int values_offset, const char* overlay_text, float scale_min, float scale_max, ImVec2 graph_size)
+void ImGuiWidgetFlameGraph::PlotFlame(const char* label, void (*values_getter)(float* start, float* end, ImU8* level, const char** caption, const void* data, int idx), void* data, int values_count, int values_offset, const char* overlay_text, float scale_min, float scale_max, ImVec2 graph_size, void (*value_clicked)(void* data, int idx))
 {
     ImGuiWindow* window = ImGui::GetCurrentWindow();
     if (window->SkipItems)
@@ -122,6 +122,12 @@ void ImGuiWidgetFlameGraph::PlotFlame(const char* label, void (*values_getter)(f
                 ImGui::SetTooltip("%s: %f", caption, stageEnd - stageStart);
                 v_hovered = true;
                 any_hovered = v_hovered;
+            }
+            
+            bool hovered, held;
+            if (value_clicked && ImGui::ButtonBehavior(ImRect(pos0, pos1), ImGui::GetID(caption), &hovered, &held, ImGuiButtonFlags_None))
+            {
+              value_clicked(data, i);
             }
 
             window->DrawList->AddRectFilled(pos0, pos1, v_hovered ? col_hovered : col_base);

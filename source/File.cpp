@@ -17,6 +17,75 @@ namespace LibS06
     return data;
   }
 
+  void TracingInfo::Place(std::unique_ptr<TracingInfo> aInfo)
+  {
+    for (auto& child : Children)
+    {
+      if ((aInfo->StartInBytes >= child->StartInBytes) && (aInfo->EndInBytes <= child->EndInBytes))
+      {
+        child->Place(std::move(aInfo));
+        return;
+      }
+    }
+
+    Children.emplace_back(std::move(aInfo));
+  }
+  
+  void TracingInfo::Place(File* aFile)
+  {
+    for (auto& info : aFile->GetTracingInfos())
+    {
+      Place(std::move(info));
+    }
+
+    std::string line;
+    for (auto& [address, data] : aFile->GetAddressMap())
+    {
+      auto positionInFile = address + aFile->GetRootNodeAddress();
+      line += data.File;
+      line += "(";
+      line += std::to_string(data.Line);
+      line += ") [";
+      line += data.Function;
+      line += "] Address Read";
+      
+      Place(std::make_unique<TracingInfo>(line.c_str(), positionInFile, positionInFile + 4));
+			line.clear();
+    }
+
+    aFile->GetTracingInfos().clear();
+  }
+  
+  void TracingInfo::Sort()
+  {
+    std::sort(Children.begin(), Children.end(), [](std::unique_ptr<TracingInfo> const& left, std::unique_ptr<TracingInfo> const& right)
+    {
+      return (left->StartInBytes < right->StartInBytes) && (left->Range() >= right->Range());
+    });
+
+    for (auto& child : Children)
+      child->Sort();
+  }
+  
+  void TracingInfo::CalculateDepth(size_t aStart)
+  {
+    Depth = aStart;
+    
+    for (auto& child : Children)
+      child->CalculateDepth(Depth + 1);
+  }
+
+  std::vector<TracingInfo*> TracingInfo::Flatten()
+  {
+    std::vector<TracingInfo*> toReturn;
+    toReturn.push_back(this);
+
+    for (auto& child : Children)
+      child->Flatten(toReturn);
+
+    return toReturn;
+  }
+
   File::File(std::string aFile, Style aStyle, Endianess aEndianess /*= Endianess::Little*/)
     : mStyle{aStyle}
     , mFileDefaultEndianess{aEndianess}
@@ -124,16 +193,20 @@ namespace LibS06
 
   std::string File::ReadString(size_t aSize)
   {
+    auto address = GetCurrentAddress();
     std::string value;
 
     for (size_t i = 0; i < aSize; ++i)
       value += Read<char>();
+    
+    AddLabel(value.c_str(), address, address + value.size());
 
     return value;
   }
 
   std::string File::ReadNullTerminatedString()
   {
+    auto address = GetCurrentAddress();
     std::string value;
     auto character = Read<char>();
 
@@ -142,6 +215,8 @@ namespace LibS06
       value += character;
       character = Read<char>();
     } 
+
+    AddLabel(value.c_str(), address, address + value.size() + 1); // + 1 for the null terminator.
 
     return value;
   }

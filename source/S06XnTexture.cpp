@@ -29,6 +29,11 @@ namespace LibS06 {
 		unsigned int texture_count = file->Read<u32>();
 		size_t texture_table_address = file->ReadAddressFileEndianess(__FILE__, __LINE__, __PRETTY_FUNCTION__);
 
+		file->AddLabel(
+			"Texture Table", 
+			texture_table_address, 
+			texture_table_address + (file_mode == MODE_YNO ? texture_count*8 : texture_count*20 + 4));
+
 		for (size_t i=0; i<texture_count; i++) {
 			if (file_mode == MODE_YNO) {
 				file->SetAddress(texture_table_address + i*8);
