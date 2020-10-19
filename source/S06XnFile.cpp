@@ -236,9 +236,11 @@ namespace LibS06 {
 			Error::AddMessage(Error::LogType::NULL_REFERENCE, LIBS06_XNINFO_ERROR_MESSAGE_NULL_FILE);
 			return;
 		}
-		
-		head_address = file->GetCurrentAddress();
-		section_size = file->Read<u32>() + 4;  // + 4 because the SonicXNSection isn't counted in the size of the inheritor.
+
+		section_size = file->Read<u32>();
+		file->AddLabel((std::string("Section Size: ") + std::to_string(section_size)).c_str(), file->GetCurrentAddress() - 4, file->GetCurrentAddress());
+
+		head_address = file->GetCurrentAddress(); // The actual section start is just after the SonicXNSection
 	}
 
 	void SonicXNSection::write(File *file) {
@@ -258,7 +260,7 @@ namespace LibS06 {
 
 		
 		section_size = bookmark - head_address - LIBS06_XNSECTION_HEADER_SIZE;
-		file->SetAddress(head_address + 4);
+		file->SetAddress(head_address - 4);
 		file->Write<u32>(section_size);
 
 		file->SetAddress(bookmark);
@@ -339,6 +341,7 @@ namespace LibS06 {
 
 
 	SonicXNSection *SonicXNFile::readSection(File *file) {
+		file->AddLabel("SonicXNSection", file->GetCurrentAddress(), file->GetCurrentAddress() + 8);
 		std::string identifier = file->ReadString(4);
 
 		if (identifier == header_info) {

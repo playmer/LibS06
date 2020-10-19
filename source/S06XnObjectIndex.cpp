@@ -18,6 +18,7 @@
 //=========================================================================
 
 #include <algorithm>
+#include <numeric>
 #include "S06XnFile.h"
 
 namespace LibS06 {
@@ -44,53 +45,71 @@ namespace LibS06 {
 		index_morph_count = file->Read<u32>();
 		index_morph_address = file->ReadAddressFileEndianess(__FILE__, __LINE__, __PRETTY_FUNCTION__);
 		index_address = file->ReadAddressFileEndianess(__FILE__, __LINE__, __PRETTY_FUNCTION__);
+		
+		file->AddLabel("Morph Index Block", index_morph_address, index_morph_address + (index_morph_count * 2));
 
-		for (size_t i=0; i<index_morph_count; i++) {
-			file->SetAddress(index_morph_address + i*2);
+		// Read strip sizes
+		file->SetAddress(index_morph_address);
+		for (size_t i=0; i<index_morph_count; i++)
+		{
 			unsigned short index = file->Read<u16>();
 			strip_sizes.push_back(index);
 		}
-		
-		size_t additional_index=0;
-		for (size_t m=0; m<strip_sizes.size(); m++) {
-			unsigned short last_index_1=0;
-			unsigned short last_index_2=0;
-			unsigned short index=0;
-			int count=0;
 
-			for (size_t i=additional_index; i<additional_index+strip_sizes[m]; i++) {
-				last_index_1 = last_index_2;
-				last_index_2 = index;
-	
-				file->SetAddress(index_address + i*2);
-				index = file->Read<u16>();
-				indices.push_back(index);
-				count++;
+		size_t totalIndices = std::accumulate(strip_sizes.begin(), strip_sizes.end(), (size_t)0);
 
-				if ((index == last_index_1) || (index == last_index_2) || (last_index_1 == last_index_2)) {
-					Error::AddMessage(Error::LogType::WARNING, "Invalid triangle found at " + ToString(file->GetCurrentAddress()-6) + ". Strip of size " + ToString(strip_sizes[m]) + " starts at " + ToString(index_address + additional_index*2));
-					continue;
-				}
-			
-				if (count >= 3) {
-					if (count%2==1) {
-						indices_vector.push_back(glm::vec3(last_index_1, last_index_2, index));
-					}
-					else {
-						indices_vector.push_back(glm::vec3(index, last_index_2, last_index_1));
-					}
-				}
-
-				if (index == (unsigned short)0xFFFF) {
-					printf("Unhandled case! Index with value 0xFFFF exists.\n");
-					getchar();
-				}
-			}
-
-			additional_index += strip_sizes[m];
+		// Debugging info
+		size_t indexBlockOffset = 0;
+		for (auto stripSize : strip_sizes)
+		{
+			file->AddLabel("Index Block", index_address + indexBlockOffset, file->GetCurrentAddress() + stripSize);
+			indexBlockOffset += stripSize;
 		}
+
+		file->SetAddress(index_address);
+		for (size_t i = 0; i < totalIndices; ++i)
+			indices.push_back(file->Read<u16>());
 		
-		file->AddLabel("SonicXNIndexTable", startAddress, file->GetCurrentAddress());
+		//size_t additional_index=0;
+		//for (size_t m = 0; m < strip_sizes.size(); m++) {
+		//	unsigned short last_index_1=0;
+		//	unsigned short last_index_2=0;
+		//	unsigned short index=0;
+		//	int count=0;
+		//
+		//	for (size_t i=additional_index; i<additional_index+strip_sizes[m]; i++) {
+		//		last_index_1 = last_index_2;
+		//		last_index_2 = index;
+		//
+		//		file->SetAddress(index_address + i*2);
+		//		index = file->Read<u16>();
+		//		indices.push_back(index);
+		//		count++;
+		//
+		//		if ((index == last_index_1) || (index == last_index_2) || (last_index_1 == last_index_2)) {
+		//			Error::AddMessage(Error::LogType::WARNING, "Invalid triangle found at " + ToString(file->GetCurrentAddress()-6) + ". Strip of size " + ToString(strip_sizes[m]) + " starts at " + ToString(index_address + additional_index*2));
+		//			continue;
+		//		}
+		//	
+		//		if (count >= 3) {
+		//			if (count%2==1) {
+		//				indices_vector.push_back(glm::vec3(last_index_1, last_index_2, index));
+		//			}
+		//			else {
+		//				indices_vector.push_back(glm::vec3(index, last_index_2, last_index_1));
+		//			}
+		//		}
+		//
+		//		if (index == (unsigned short)0xFFFF) {
+		//			printf("Unhandled case! Index with value 0xFFFF exists.\n");
+		//			getchar();
+		//		}
+		//	}
+		//
+		//	additional_index += strip_sizes[m];
+		//}
+		
+		//file->AddLabel("SonicXNIndexTable", startAddress, file->GetCurrentAddress());
 	}
 
 	

@@ -230,12 +230,15 @@ namespace LibS06 {
 			SonicVertex *vertex = new SonicVertex();
 			vertex->read(file, vertex_size, big_endian, flag_1, file_mode);
 			vertices.push_back(vertex);
-			vertexLabels.emplace_back(vertexAddress, file->GetCurrentAddress());
+			vertexLabels.emplace_back(vertexAddress, vertexAddress + vertex_size);
 		}
 
 		printf("Done reading vertices...\n");
 		
-		file->AddLabel("SonicXNVertex", startAddress, file->GetCurrentAddress());
+		file->AddLabel("SonicXNVertexTable", startAddress, file->GetCurrentAddress());
+
+		for (auto& vertexLabel : vertexLabels)
+			file->AddLabel("SonicXNVertex", vertexLabel.first, vertexLabel.second);
 	}
 
 	void SonicVertexTable::writeVertices(File *file, XNFileMode file_mode) {

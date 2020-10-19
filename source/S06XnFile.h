@@ -682,7 +682,7 @@ namespace LibS06 {
 			unsigned int flag;
 			std::vector<unsigned short> indices;
 			std::vector<unsigned short> strip_sizes;
-			std::vector<glm::vec3> indices_vector;
+			//std::vector<glm::vec3> indices_vector;
 
 			size_t strip_sizes_address_data;
 			size_t indices_address_data;
