@@ -287,7 +287,7 @@ std::unique_ptr<OpenGLData> SetUpOpenGLData(LibS06::SonicXNFile* aFile)
   // Depth Buffer
   gl::glGenRenderbuffers(1, &data->depthrenderbuffer);
   gl::glBindRenderbuffer(gl::GL_RENDERBUFFER, data->depthrenderbuffer);
-  gl::glRenderbufferStorage(gl::GL_RENDERBUFFER, gl::GL_DEPTH_COMPONENT, 1024, 768);
+  gl::glRenderbufferStorage(gl::GL_RENDERBUFFER, gl::GL_DEPTH_COMPONENT, 800, 800);
   gl::glFramebufferRenderbuffer(gl::GL_FRAMEBUFFER, gl::GL_DEPTH_ATTACHMENT, gl::GL_RENDERBUFFER, data->depthrenderbuffer);
 
     // Set "renderedTexture" as our colour attachement #0
