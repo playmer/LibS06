@@ -117,6 +117,12 @@ namespace LibS06
   class File
   {
   public:
+    struct DataReadData
+    {
+      char const* Label;
+      size_t BytesRead;
+    };
+
     struct AddressReadData
     {
       char const* File;
@@ -133,6 +139,21 @@ namespace LibS06
 
     File(std::string aFile, Style aStyle, Endianess aEndianess = Endianess::Little);
 
+    struct TracingInfoLogger
+    {
+      TracingInfoLogger(File* aFile);
+      ~TracingInfoLogger();
+      void AddLabel(char const* aName, size_t aStartInBytes, size_t aEndInBytes);
+
+      std::vector<std::unique_ptr<TracingInfo>> mTracingInfos;
+      File* mFile;
+    };
+
+    TracingInfoLogger GetTracingInfoLogger()
+    {
+      return TracingInfoLogger(this);
+    }
+
     bool Valid()
     {
       return nullptr != mFile;
@@ -145,8 +166,11 @@ namespace LibS06
     }
 
     template <typename tType>
-    tType Read(Endianess aEndianess)
+    tType Read(Endianess aEndianess, const char* aReadLabel = nullptr)
     {
+      if (nullptr != aReadLabel)
+        LogRead(aReadLabel, sizeof(tType));
+
       const bool needEndianessSwap =  aEndianess != SystemEndianess();
 
       auto value = ReadData<tType>();
@@ -170,13 +194,13 @@ namespace LibS06
     }
 
     template <typename tType>
-    tType Read()
+    tType Read(const char* aReadLabel = nullptr)
     {
       return Read<tType>(mFileDefaultEndianess);
     }
 
     template <>
-    glm::vec2 Read<glm::vec2>(Endianess aEndianessRead)
+    glm::vec2 Read<glm::vec2>(Endianess aEndianessRead, const char* aReadLabel)
     {
       glm::vec3 value;
       value.x = Read<f32>(aEndianessRead);
@@ -185,7 +209,7 @@ namespace LibS06
     }
 
     template <>
-    glm::vec3 Read<glm::vec3>(Endianess aEndianessRead)
+    glm::vec3 Read<glm::vec3>(Endianess aEndianessRead, const char* aReadLabel)
     {
       glm::vec3 value;
       value.x = Read<f32>(aEndianessRead);
@@ -196,7 +220,7 @@ namespace LibS06
     }
 
     template <>
-    glm::vec4 Read<glm::vec4>(Endianess aEndianessRead)
+    glm::vec4 Read<glm::vec4>(Endianess aEndianessRead, const char* aReadLabel)
     {
       glm::vec4 value;
       value.x = Read<f32>(aEndianessRead);
@@ -208,7 +232,7 @@ namespace LibS06
     }
 
     template <>
-    glm::quat Read<glm::quat>(Endianess aEndianessRead)
+    glm::quat Read<glm::quat>(Endianess aEndianessRead, const char* aReadLabel)
     {
       glm::quat value;
       value.x = Read<f32>(aEndianessRead);
@@ -220,7 +244,7 @@ namespace LibS06
     }
 
     template <>
-    glm::mat4 Read<glm::mat4>(Endianess aEndianessRead)
+    glm::mat4 Read<glm::mat4>(Endianess aEndianessRead, const char* aReadLabel)
     {
       glm::mat4 value;
       value[0] = Read<glm::vec4>(aEndianessRead);
@@ -231,36 +255,36 @@ namespace LibS06
     }
 
     template <>
-    glm::vec2 Read<glm::vec2>()
+    glm::vec2 Read<glm::vec2>(const char* aReadLabel)
     {
       return Read<glm::vec2>(mFileDefaultEndianess);
     }
 
     template <>
-    glm::vec3 Read<glm::vec3>()
+    glm::vec3 Read<glm::vec3>(const char* aReadLabel)
     {
       return Read<glm::vec3>(mFileDefaultEndianess);
     }
 
     template <>
-    glm::vec4 Read<glm::vec4>()
+    glm::vec4 Read<glm::vec4>(const char* aReadLabel)
     {
       return Read<glm::vec4>(mFileDefaultEndianess);
     }
 
     template <>
-    glm::quat Read<glm::quat>()
+    glm::quat Read<glm::quat>(const char* aReadLabel)
     {
       return Read<glm::quat>(mFileDefaultEndianess);
     }
 
     template <>
-    glm::mat4 Read<glm::mat4>()
+    glm::mat4 Read<glm::mat4>(const char* aReadLabel)
     {
       return Read<glm::mat4>(mFileDefaultEndianess);
     }
     
-    void LogRead(const char* aFileName, size_t aLineInFile, const char* aFunctionName, size_t aBytesRead);
+    void LogRead(const char* aLabel, size_t aBytesRead);
     void LogReadAddress(const char* aFileName, size_t aLineInFile, const char* aFunctionName, size_t aBytesRead);
     size_t ReadAddress(Endianess aEndianess, const char* aFileName, size_t aLineInFile, const char* aFunction);
     size_t ReadAddress(bool aBigEndian, const char* aFileName, size_t aLineInFile, const char* aFunction);
@@ -367,6 +391,7 @@ namespace LibS06
     void WriteAddressTableBBIN(size_t negativeOffset = 0);
 
     std::map<size_t, AddressReadData> const& GetAddressMap();
+    std::map<size_t, DataReadData> const& GetReadMap();
     size_t GetRootNodeAddress();
     
     std::vector<char>& GetData()
@@ -431,7 +456,7 @@ namespace LibS06
 
     std::vector<std::unique_ptr<TracingInfo>> mTracingInfos;
     std::map<size_t, AddressReadData> mAddressReadMap;
-    std::map<size_t, AddressReadData> mReadMap;
+    std::map<size_t, DataReadData> mReadMap;
     void GetRangesRead();
 
     

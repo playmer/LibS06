@@ -28,7 +28,7 @@ namespace LibS06 {
 		unsigned int table_count = 0;
 		size_t table_address = 0;
 
-		table_count = file->Read<u32>();
+		table_count = file->Read<u32>("table_count");
 		table_address = file->ReadAddressFileEndianess(__FILE__, __LINE__, __PRETTY_FUNCTION__);
 
 		file->SetAddress(table_address);
@@ -37,14 +37,10 @@ namespace LibS06 {
 		printf("Reading Index Table with flag %d at %d\n", flag, (int)table_address);
 
 		// XNO and ZNO Index Table
-		unsigned int index_count=0;
-		unsigned int index_morph_count=0;
-		size_t index_morph_address=0;
-		size_t index_address=0;
-		index_count = file->Read<u32>();
-		index_morph_count = file->Read<u32>();
-		index_morph_address = file->ReadAddressFileEndianess(__FILE__, __LINE__, __PRETTY_FUNCTION__);
-		index_address = file->ReadAddressFileEndianess(__FILE__, __LINE__, __PRETTY_FUNCTION__);
+		unsigned int index_count = file->Read<u32>("index_count");
+		unsigned int index_morph_count = file->Read<u32>("index_morph_count");
+		size_t index_morph_address = file->ReadAddressFileEndianess(__FILE__, __LINE__, __PRETTY_FUNCTION__);
+		size_t index_address = file->ReadAddressFileEndianess(__FILE__, __LINE__, __PRETTY_FUNCTION__);
 		
 		file->AddLabel("Morph Index Block", index_morph_address, index_morph_address + (index_morph_count * 2));
 

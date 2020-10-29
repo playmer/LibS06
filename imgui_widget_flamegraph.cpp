@@ -115,6 +115,9 @@ void ImGuiWidgetFlameGraph::PlotFlame(const char* label, void (*values_getter)(f
 
             auto pos0 = inner_bb.Min + ImVec2(startX * width, height);
             auto pos1 = inner_bb.Min + ImVec2(endX * width, height + blockHeight);
+            
+            if (!ImGui::IsRectVisible(pos0, pos1))
+              continue;
 
             bool v_hovered = false;
             if (ImGui::IsMouseHoveringRect(pos0, pos1))

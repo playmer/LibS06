@@ -680,6 +680,8 @@ int main(int, char**)
   while (context.Update())
   {
     ImGui::DockSpaceOverViewport();
+    
+    sample.Update();
 
     if (ImGui::Begin("MainWindow", nullptr, ImGuiWindowFlags_NoCollapse))
     {

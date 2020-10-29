@@ -52,6 +52,13 @@ namespace LibS06
       Place(std::make_unique<TracingInfo>(line.c_str(), positionInFile, positionInFile + 4));
 			line.clear();
     }
+    
+    for (auto& [address, data] : aFile->GetReadMap())
+    {
+      auto positionInFile = address + aFile->GetRootNodeAddress();
+      Place(std::make_unique<TracingInfo>(data.Label, positionInFile, positionInFile + data.BytesRead));
+			line.clear();
+    }
 
     aFile->GetTracingInfos().clear();
   }
@@ -84,6 +91,24 @@ namespace LibS06
       child->Flatten(toReturn);
 
     return toReturn;
+  }
+
+  
+  File::TracingInfoLogger::TracingInfoLogger(File* aFile)
+    : mFile{ aFile }
+  {
+
+  }
+
+  File::TracingInfoLogger::~TracingInfoLogger()
+  {
+    for (auto& info : mTracingInfos)
+        mFile->mTracingInfos.emplace_back(std::move(info));
+  }
+    
+  void File::TracingInfoLogger::AddLabel(char const* aName, size_t aStartInBytes, size_t aEndInBytes)
+  {
+    mTracingInfos.emplace_back(std::make_unique<TracingInfo>(aName, aStartInBytes, aEndInBytes));
   }
 
   File::File(std::string aFile, Style aStyle, Endianess aEndianess /*= Endianess::Little*/)
@@ -119,8 +144,13 @@ namespace LibS06
 
     }
   }
+  
+  std::map<size_t, File::DataReadData> const& File::GetReadMap()
+  {
+    return mReadMap;
+  }
 
-  void File::LogRead(const char* aFileName, size_t aLineInFile, const char* aFunctionName, size_t aBytesRead)
+  void File::LogRead(const char* aLabel, size_t aBytesRead)
   {
     if (false == mHasRootNodeAddressBeenSet)
       return;
@@ -129,7 +159,7 @@ namespace LibS06
     
     if ((-1 != gPositionToBreakOn) && (offsetToLog == gPositionToBreakOn)) __debugbreak();
 
-    mReadMap.emplace(GetCurrentAddress() - mRootNodeAddress, AddressReadData{aFileName, aFunctionName, aLineInFile, 4});
+    mReadMap.emplace(GetCurrentAddress() - mRootNodeAddress, DataReadData{aLabel, aBytesRead});
   }
 
   void File::LogReadAddress(const char* aFileName, size_t aLineInFile, const char* aFunctionName, size_t aBytesRead)

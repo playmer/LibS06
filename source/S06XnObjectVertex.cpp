@@ -182,10 +182,12 @@ namespace LibS06 {
 	}
 
 	void SonicVertexTable::read(File *file, XNFileMode file_mode, bool big_endian) {
-		std::vector<std::pair<size_t, size_t>> vertexLabels;
+		auto tracer = file->GetTracingInfoLogger();
 		auto startAddress = file->GetCurrentAddress();
 		unsigned int table_count = file->Read<u32>();
 		size_t table_address = file->ReadAddressFileEndianess(__FILE__, __LINE__, __PRETTY_FUNCTION__);
+		
+		file->AddLabel("SonicXNVertexTable", startAddress, file->GetCurrentAddress());
 
 		if (table_count > 1) {
 			printf("Unhandled Case Vertex Table %d.\n", table_count);
@@ -202,6 +204,8 @@ namespace LibS06 {
 
 		unsigned int bone_table_count= file->Read<u32>();
 		size_t bone_table_offset = file->ReadAddressFileEndianess(__FILE__, __LINE__, __PRETTY_FUNCTION__);
+		
+		file->AddLabel("Vertex Part Table", table_address, file->GetCurrentAddress());
 
 		printf("%d %d %d\n", vertex_size, (int)vertex_offset, bone_table_count);
 		printf("Flags: %d %d\n", flag_1, flag_2);
@@ -212,33 +216,24 @@ namespace LibS06 {
 			printf("Bone table is bigger than 32! Size: %d\n", bone_table_count);
 			getchar();
 		}
-
-		std::string bone_table_str="Bone Blending Table: ";
-		for (size_t i=0; i<bone_table_count; i++) {
-			file->SetAddress(bone_table_offset + i*4);
-			unsigned int bone = file->Read<u32>();
-			bone_table.push_back(bone);
-
-			bone_table_str += ToString(bone) + " ";
-		}
+		
+		tracer.AddLabel("Bone Table", bone_table_offset, bone_table_offset + (4 * bone_table_count));
+		file->SetAddress(bone_table_offset);
+		for (size_t i = 0; i < bone_table_count; i++)
+			bone_table.push_back(file->Read<u32>());
 
 		Error::AddMessage(Error::LogType::LOG, "Vertex Table with a bone blending table of size " + ToString(bone_table.size()));
 
-		for (size_t i=0; i<vertex_count; i++) {
-			auto vertexAddress = vertex_offset + i * vertex_size;
+		for (size_t i = 0; i < vertex_count; i++) {
+			auto vertexAddress = vertex_offset + (i * vertex_size);
 			file->SetAddress(vertexAddress);
-			SonicVertex *vertex = new SonicVertex();
-			vertex->read(file, vertex_size, big_endian, flag_1, file_mode);
-			vertices.push_back(vertex);
-			vertexLabels.emplace_back(vertexAddress, vertexAddress + vertex_size);
+			vertices.push_back(new SonicVertex());
+			vertices.back()->read(file, vertex_size, big_endian, flag_1, file_mode);
+			
+			tracer.AddLabel("SonicXNVertex", vertexAddress, vertexAddress + vertex_size);
 		}
 
 		printf("Done reading vertices...\n");
-		
-		file->AddLabel("SonicXNVertexTable", startAddress, file->GetCurrentAddress());
-
-		for (auto& vertexLabel : vertexLabels)
-			file->AddLabel("SonicXNVertex", vertexLabel.first, vertexLabel.second);
 	}
 
 	void SonicVertexTable::writeVertices(File *file, XNFileMode file_mode) {
